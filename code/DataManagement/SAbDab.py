@@ -1,4 +1,4 @@
-
+import pprint
 ####################
 ##Sequence Retrieval
 ####################
@@ -6,24 +6,28 @@
 #For now this is a dummy before a suitable API is available.
 def fetch_sabdab_seqs():
 	
+	from ABDB import database
 	structures = []
 	
-	dp_1 = {'pdb':'1ahw','H':'','pdb-h':'B','pdb-l':'A'}
-	dp_2 = {'pdb':'1ahw','H':'','pdb-h':'C','pdb-l':'N'}
-	
-	dp_1['L'] = 'DIKMTQSPSSMYASLGERVTITCKASQDIRKYLNWYQQKPWKSPKTLIYYATSLADGVPSRFSGSGSGQDYSLTISSLESDDTATYYCLQHGESPYTFGGGTKLEINRADAAPTVSIFPPSSEQLTSGGASVVCFLNNFYPKDINVKWKIDGSERQNGVLNSWTDQDSKDSTYSMSSTLTLTKDEYERHNSYTCEATHKTSTSPIVKSFNRNEC'
-	dp_1['H'] ='EIQLQQSGAELVRPGALVKLSCKASGFNIKDYYMHWVKQRPEQGLEWIGLIDPENGNTIYDPKFQGKASITADTSSNTAYLQLSSLTSEDTAVYYCARDNSYYFDYWGQGTTLTVSSAKTTPPSVYPLAPGSAAQTNSMVTLGCLVKGYFPEPVTVTWNSGSLSSGVHTFPAVLQSDLYTLSSSVTVPSSTWPSETVTCNVAHPASSTKVDKKI' 
-	
-	
-	dp_2['L'] = 'DIKMTQSPSSMYASLGERVTITCKASQDIRKYLNWYQQKPWKSPKTLIYYATSLADGVPSRFSGSGSGQDYSLTISSLESDDTATYYCLQHGESPYTFGGGTKLEINRADAAPTVSIFPPSSEQLTSGGASVVCFLNNFYPKDINVKWKIDGSERQNGVLNSWTDQDSKDSTYSMSSTLTLTKDEYERHNSYTCEATHKTSTSPIVKSFNRNEC'
-	dp_2['H'] ='EIQLQQSGAELVRPGALVKLSCKASGFNIKDYYMHWVKQRPEQGLEWIGLIDPENGNTIYDPKFQGKASITADTSSNTAYLQLSSLTSEDTAVYYCARDNSYYFDYWGQGTTLTVSSAKTTPPSVYPLAPGSAAQTNSMVTLGCLVKGYFPEPVTVTWNSGSLSSGVHTFPAVLQSDLYTLSSSVTVPSSTWPSETVTCNVAHPASSTKVDKKI' 
-	
-	
-	structures.append(dp_1)
-	structures.append(dp_2)
+	for pdb in database:
+		pdb_details = database.fetch(pdb) # get the details of a pdb in the database
+		raw_seqs =  pdb_details.get_raw_sequences()
+		single_fab = {'pdb':pdb}
+		for fab_details in pdb_details.get_fabs():
+			
+			if fab_details.VH!='NA':
+				single_fab['pdb-h'] = fab_details.VH
+				single_fab['H'] = raw_seqs[fab_details.VH]
+			if fab_details.VL!='NA':
+				single_fab['pdb-l'] = fab_details.VL
+				single_fab['L'] = raw_seqs[fab_details.VL]
+			
+		structures.append(single_fab)
+
 	
 	return structures
 
 
 if __name__ == '__main__':
-	pass
+	strucs = fetch_sabdab_seqs()
+	pprint.pprint(strucs)
