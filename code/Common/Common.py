@@ -1,4 +1,21 @@
-####Common functions##########
+####Common functions & locaions##########
+import random,os
+#################
+#Common functions
+#################
+
+#Generates a random filename
+def random_filename():
+	filename = str(int(1000000*random.random()))+str(int(1000000*random.random()))+str(int(1000000*random.random()))
+	return filename
+	
+
+#################
+#Common locations
+#################
+
+#Where the numbered_datasets are stored
+numbered_datasets_location = '../data/numbered'
 
 
 ############
@@ -32,18 +49,16 @@ def is_CDR(res,deff='chothia'):
 #ANARCI-- number.
 from anarci import anarci
 
-
 #BUlk number sequences. 
 #Input: dictionary from sequences ids to raw sequences
 #Output: dictionary from sequence ids to numbered dictionaries of chothia ids to aa
 def bulk_number(sequences):
-
+	print "[Common.py] Bulk Numbering ",len(sequences),'sequences...'
 	numbered_sequences = {}
 	for sequence_id in sequences:
 		numbered_sequences[sequence_id] = number_sequence(sequences[sequence_id])
 		
 	return numbered_sequences
-
 
 #Given a raw sequence, perform anarci annotation.
 #Input: raw sequence
