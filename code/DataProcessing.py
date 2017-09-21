@@ -4,6 +4,13 @@ import json,pprint
 #How many numbered sequences to hold in a single file.
 chunk_size = 100
 
+#Given raw sequences, number them and save.
+def number_and_save(data,experiment):
+	
+	numbered_results = bulk_number(data)
+	#Save the chunk
+	save_data(experiment,numbered_results)
+
 #Update the antibody portion of the DB.
 def update_sabdab():
 	from DataManagement.SAbDab import fetch_sabdab_seqs
@@ -12,8 +19,10 @@ def update_sabdab():
 	#Translate info format suitbale for numbering -- format the name as PDBchainHchainL
 	heavies = {}
 	lights = {}
-	numbered = {}
+	prog = 0
 	for ab in antibodies:
+		prog+=1
+		print "[DataProcessing.py] Renumbering SABDAB ",prog,'out of ',len(antibodies),'antibodies'
 		if ab['H']!=None:
 			heavy_nm = ab['pdb']+ab['pdb-h']
 			heavies[heavy_nm] = ab['H']
@@ -22,23 +31,61 @@ def update_sabdab():
 			lights[light_nm] = ab['L']
 		#Number lights.
 		if len(lights) > chunk_size:
-			print "[DataProcessing.py] Currently numbered sequences",len(numbered),'out of',len(antibodies)
-			numbered_results = bulk_number(lights)
-			#Save the chunk
-			save_data('sabdab',numbered_results)
-			for sequence in numbered_results:
-				numbered[sequence] = numbered_results[sequence]
-	#TODO See if we have some leftover sequences.
+			number_and_save(lights,'sabdab')
+			lights = {}
+		#Number lights.
+		if len(heavies) > chunk_size:
+			number_and_save(heavies,'sabdab')
+			heavies = {}
+	#See if we have some leftover sequences.
+	#Number lights.
+	if len(lights) > 0:
+		number_and_save(lights,'sabdab')
+	#Number lights.
+	if len(heavies) > 0:
+		number_and_save(heavies,'sabdab')
+
+#Parse out the sequences from a fasta file, number and save them
+def parse_fasta_and_number(experiment_name,fasta_location):
+	sequences = {}
+	curr_name = ""
+	prog = 0
+	for line in open(fasta_location):
+		prog+=1
+		print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
+		line = line.strip()
+		if '>' in line:
+			curr_name = line.replace('>','')
+		else:
+			sequences[curr_name] = line
+		if len(sequences)> chunk_size:
+			number_and_save(sequences,experiment_name)
+			sequences = {}
+	#See if we got any leftovers
+	if len(sequences)> chunk_size:
+		number_and_save(sequences,experiment_name)
 	
+	
+			
+		
 if __name__ == '__main__':
 
 	import sys
 	command = sys.argv[1]
-
 	
 	#Update the sabdab datbaase
+	#Usage: python DataProcessing.py update_sabdab
+	#Saves pickled numbered files into [datadirectory]/numbered/sabdab/
 	if command == 'update_sabdab':
-		 update_sabdab()
+		update_sabdab()
+	#Create a numbered dataset from fasta file.
+	#Usage: python DataProcessing.py [experiment_name] [fasta location]
+		#Saves pickled numbered files into [datadirectory]/numbered/[experiment_name]/
+	if command == 'number_dataset':
+		experiment_name = sys.argv[2]
+		fasta_location = sys.argv[3]
+		parse_fasta_and_number(experiment_name,fasta_location)
+		
 		 
 		 
 	#DEUBGGING

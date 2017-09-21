@@ -5,14 +5,14 @@ import pprint
 
 #For now this is a dummy before a suitable API is available.
 def fetch_sabdab_seqs():
-	
+	print "[SABDAB.py] Fetching sequences"
 	from ABDB import database
 	structures = []
 	
 	for pdb in database:
 		pdb_details = database.fetch(pdb) # get the details of a pdb in the database
 		raw_seqs =  pdb_details.get_raw_sequences()
-		single_fab = {'pdb':pdb}
+		single_fab = {'pdb':pdb,'pdb-h':None,'pdb-l':None,'H':None,'L':None}
 		for fab_details in pdb_details.get_fabs():
 			
 			if fab_details.VH!='NA':
