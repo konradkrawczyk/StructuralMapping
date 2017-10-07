@@ -11,7 +11,6 @@ def save_data(experiment_name,data):
 	if not os.path.exists(target_path):
 		os.mkdir(target_path)
 	
-	
 	#Random name for the chunk
 	filename = random_filename()
 	while os.path.exists(join(target_path,filename)):
@@ -21,12 +20,9 @@ def save_data(experiment_name,data):
 	print "[DataHandling.py] Dumping chunk",filename,'for experiment',experiment_name
 	pickle.dump(data,open(join(target_path,filename),'w'))
 
-
 if __name__ == '__main__':
 	import sys
 	command = sys.argv[1]
-
-	
 
 	if command == 'saving':
 		experiment_name  =  'sample data'

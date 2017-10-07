@@ -10,6 +10,7 @@ def random_filename():
 	return filename
 	
 
+
 #################
 #Common locations
 #################
@@ -60,6 +61,14 @@ def bulk_number(sequences):
 		
 	return numbered_sequences
 
+#From a mapping from chothia ids to amino acids, get the full sequence.
+def get_sequence(s):
+	sequence = ""
+	for chid in sorted(s):
+		
+		sequence += s[chid][0]
+	return sequence	
+
 #Given a raw sequence, perform anarci annotation.
 #Input: raw sequence
 #output dictionary from chothia ids to amino acids and chothia cdr annotations
@@ -76,6 +85,8 @@ def number_sequence(query_seq):
 	for sid in sorted(query):
 		
 		chid = (sid[0][0],sid[0][1].replace(' ',''),chain)
+		if sid[1] == '-':
+			continue
 		_query[chid] = (sid[1],is_CDR(chain+str(sid[0][0])))
 	
 	query = _query

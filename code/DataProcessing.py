@@ -65,8 +65,6 @@ def parse_fasta_and_number(experiment_name,fasta_location):
 	if len(sequences)> chunk_size:
 		number_and_save(sequences,experiment_name)
 	
-	
-			
 		
 if __name__ == '__main__':
 
@@ -79,7 +77,7 @@ if __name__ == '__main__':
 	if command == 'update_sabdab':
 		update_sabdab()
 	#Create a numbered dataset from fasta file.
-	#Usage: python DataProcessing.py [experiment_name] [fasta location]
+	#Usage: python DataProcessing.py number_dataset [experiment_name] [fasta location]
 		#Saves pickled numbered files into [datadirectory]/numbered/[experiment_name]/
 	if command == 'number_dataset':
 		experiment_name = sys.argv[2]
