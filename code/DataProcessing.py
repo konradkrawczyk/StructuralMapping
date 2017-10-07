@@ -64,7 +64,7 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 			number_and_save(sequences,experiment_name)
 			sequences = {}
 	#See if we got any leftovers
-	if len(sequences)> chunk_size:
+	if len(sequences)> 0:
 		number_and_save(sequences,experiment_name)
 	
 		
