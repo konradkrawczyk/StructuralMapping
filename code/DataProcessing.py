@@ -46,12 +46,14 @@ def update_sabdab():
 		number_and_save(heavies,'sabdab')
 
 #Parse out the sequences from a fasta file, number and save them
-def parse_fasta_and_number(experiment_name,fasta_location):
+def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 	sequences = {}
 	curr_name = ""
 	prog = 0
 	for line in open(fasta_location):
 		prog+=1
+		if prog<start or prog>finish:
+			continue
 		print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
 		line = line.strip()
 		if '>' in line:
@@ -82,8 +84,22 @@ if __name__ == '__main__':
 	if command == 'number_dataset':
 		experiment_name = sys.argv[2]
 		fasta_location = sys.argv[3]
-		parse_fasta_and_number(experiment_name,fasta_location)
+		start = sys.argv[4]
+		finish = sys.argv[5]
+		parse_fasta_and_number(experiment_name,fasta_location,int(start),int(finish))
+	if command == 'parallel':
+		experiment_name = sys.argv[2]
+		fasta_location = sys.argv[3]
 		
+		ncpus = float(sys.argv[4])
+		nseqs = float(sys.argv[5])
+		dseqs = int(float(nseqs)/float(ncpus))
+		
+		done = 0
+		while done< nseqs:
+			
+			print 'python DataProcessing.py number_dataset ',experiment_name,' ',fasta_location,' ',done,done+dseqs
+			done+=dseqs
 		 
 		 
 	#DEUBGGING
