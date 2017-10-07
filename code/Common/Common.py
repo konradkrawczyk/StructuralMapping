@@ -74,7 +74,7 @@ def get_sequence(s):
 #output dictionary from chothia ids to amino acids and chothia cdr annotations
 def number_sequence(query_seq):
 	#Number the query sequence
-	res = anarci([('q',query_seq)],scheme='chothia',assign_germline=True,allowed_species=['human'])
+	res = anarci([('q',query_seq)],scheme='chothia',assign_germline=True)
 	query= res[0][0][0][0]
 	
 	chain =  res[1][0][0]['chain_type']
