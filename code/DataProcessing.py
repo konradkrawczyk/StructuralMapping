@@ -98,7 +98,7 @@ if __name__ == '__main__':
 		done = 0
 		while done< nseqs:
 			
-			print 'python DataProcessing.py number_dataset ',experiment_name,' ',fasta_location,' ',done,done+dseqs
+			print 'python DataProcessing.py number_dataset ',experiment_name,' ',fasta_location,' ',done,done+dseqs,' &'
 			done+=dseqs
 		 
 		 

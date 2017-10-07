@@ -46,7 +46,7 @@ if __name__ == '__main__':
 	
 	strucs = structural_reference()
 	print "Got",len(strucs),'structures to compare against.'
-	perform_comparison('sample',strucs)
+	perform_comparison('KELLY_HEPB_BOOSTER',strucs)
 		
 
 	#Load structural reference.
