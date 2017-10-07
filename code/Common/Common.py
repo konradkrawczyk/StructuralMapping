@@ -80,21 +80,21 @@ def number_sequence(query_seq):
         return None,None
     query= res[0][0][0][0]
 	
-	chain =  res[1][0][0]['chain_type']
+    chain =  res[1][0][0]['chain_type']
 	
-	#Translate the query into the format we want
-	#[chid,insert,chain] = (aa,is_CDR)
-	_query = {}
-	for sid in sorted(query):
+    #Translate the query into the format we want
+    #[chid,insert,chain] = (aa,is_CDR)
+    _query = {}
+    for sid in sorted(query):
 		
 		chid = (sid[0][0],sid[0][1].replace(' ',''),chain)
 		if sid[1] == '-':
 			continue
 		_query[chid] = (sid[1],is_CDR(chain+str(sid[0][0])))
 	
-	query = _query
+    query = _query
 
-	return query,chain
+    return query,chain
 	
 ###Strictly for testing purposes.	
 if __name__ == '__main__':
