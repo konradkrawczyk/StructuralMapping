@@ -67,7 +67,6 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 	if len(sequences)> 0:
 		number_and_save(sequences,experiment_name)
 	
-		
 if __name__ == '__main__':
 
 	import sys

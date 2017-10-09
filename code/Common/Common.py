@@ -75,9 +75,12 @@ def get_sequence(s):
 def number_sequence(query_seq):
 	#Number the query sequence
     try:
-	    res = anarci([('q',query_seq)],scheme='chothia',assign_germline=True)
+	res = anarci([('q',query_seq)],scheme='chothia',assign_germline=True)
     except:
         return None,None
+    #Numbering failed.
+    if res[0][0] == None:
+	return None,None
     query= res[0][0][0][0]
 	
     chain =  res[1][0][0]['chain_type']
