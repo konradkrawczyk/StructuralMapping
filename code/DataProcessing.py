@@ -86,6 +86,8 @@ if __name__ == '__main__':
 		start = sys.argv[4]
 		finish = sys.argv[5]
 		parse_fasta_and_number(experiment_name,fasta_location,int(start),int(finish))
+	#Create scripts for parallel processing
+	#python DataProcessing.py parallel [exp_name] [fasta_location] number-of-cpus number-of-seqs
 	if command == 'parallel':
 		experiment_name = sys.argv[2]
 		fasta_location = sys.argv[3]

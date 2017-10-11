@@ -10,21 +10,32 @@ import pickle
 #etc...
 def align_sequences(query, template,region=None):
 	
+	#Number of residues that align.
 	aligned = 0
+	#NUmber of residues that we actually consider (ie regions like framework)
+	considered = 0
 	for elem in sorted(query):
-		
+		#Check if this is the portion of the antibody that we are interested in. (region=None means we look at the entire sequence)
+		if region== None or query[elem][1] in region:
+			considered+=1
+		else:#Not interested in this region.
+			continue
 		if elem in template:
-			
-			if template[elem][0] == query[elem][0] and (region== None or query[elem][1] == region):
+
+			if template[elem][0] == query[elem][0]:
 				#print "Aligning",elem
 				#print "T:",template[elem]
 				#print "Q:",query[elem]
 				aligned+=1
-	
-	sid = int((float(aligned)/float(len(query)))*100)
-	print aligned,'/',len(query)
-	print "sid",sid
-	print '======'
+		
+				
+	#If there were no residues that we could look at, ignore.
+	if considered == 0:
+		return 0
+	sid = int((float(aligned)/float(considered))*100)
+	#print aligned,'/',considered
+	#print "sid",sid
+	#print '======'
 	
 	return sid
 

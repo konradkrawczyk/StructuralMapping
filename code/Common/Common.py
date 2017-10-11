@@ -17,6 +17,7 @@ def random_filename():
 
 #Where the numbered_datasets are stored
 numbered_datasets_location = '../data/numbered'
+structural_map_location = '../data/structuralmap'
 
 
 ############
