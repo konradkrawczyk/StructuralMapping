@@ -1,0 +1,9 @@
+#!/usr/bin/python
+import sys
+from tools import getFitCommands
+
+if sys.argv[1] == '--zones':
+    print getFitCommands(sys.argv[2:])
+
+ref, mobile = sys.argv[1], sys.argv[2]
+print getFitCommands(ref, mobile)

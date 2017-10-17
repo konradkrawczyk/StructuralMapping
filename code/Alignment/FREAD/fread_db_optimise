@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+
+import sys
+import os.path
+
+import sqlite3 as sql
+
+# Make sure we can import stuff from this file's directory
+sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
+sys.path.extend(os.environ['PATH'].split(':'))
+
+from prosci.shell import Params
+
+from prosci.loops.loopmodel import get_db_file_dict
+
+
+params = Params(withargument=["minlen", "maxlen"])
+
+if len(params.args) != 1:
+  print """
+  Rebuilds the specified PyFREAD database to reduce runtimes and
+  to clear any wasted disk space.
+  This should be run on any newly created PyFREAD database before first
+  using it. Speed gains after adding only a few more PDBs to an existing
+  database are minimal. Regularly updated databases should probably
+  be re-optimised once a fairly large number of PDBs have been added.
+  
+  USAGE: %s <pyfread_db>
+    <pyfread_db>   Root directory of the PyFREAD database
+  
+  OPTIONS:
+    By default, all loop lengths in the database are optimised. Use the
+    following parameters to restrict the loop lengths to be optimised.
+    
+      --minlen NUM      Minimum loop length to optimise
+      --maxlen NUM      Maximum loop length to optimise
+  """ % (params.scriptname)
+  sys.exit(1)
+
+
+min_loop_length = int(params.getOpt("minlen", 0))
+max_loop_length = int(params.getOpt("maxlen", 1000000))
+
+
+dbdir = params.args[0]
+assert os.path.isdir(dbdir)
+
+
+db_file_map = get_db_file_dict(dbdir)
+
+for loop_length in sorted(db_file_map):
+  if loop_length < min_loop_length or loop_length > max_loop_length:
+    print "Skipping loops of length %d" % (loop_length)
+    continue
+  
+  print "Optimising loops of length %d" % (loop_length)
+  
+  dbfile = db_file_map[loop_length]
+  
+  conn = sql.connect(dbfile)
+  conn.executescript("""
+  CREATE TABLE loops2 AS SELECT * FROM loops ORDER BY dihedral;
+  DROP TABLE loops;
+  ALTER TABLE loops2 RENAME TO loops;
+  VACUUM;
+  """)
+  conn.commit()
+  conn.close()

@@ -40,8 +40,7 @@ if __name__ == '__main__':
 	for f in sorted(listdir(results_location)):
 		i+=1
 		print i
-		if i> 1000:
-			break
+		
 		results = process_single_map(join(results_location,f))
 		
 		#Fold results into the global aggregate.

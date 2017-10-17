@@ -1,0 +1,219 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+import sys
+import os
+import datetime
+from optparse import OptionParser
+
+import numpy # Just to test if we have numpy installed.
+
+# Make sure we can import stuff from this file's directory
+sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])), "lib-python")))
+sys.path.extend(os.environ['PATH'].split(':'))
+
+from prosci.loops.multifread import MultiFread
+
+scriptpath = os.path.dirname(sys.argv[0])
+
+VERSION = "MultiFREAD 1.00 (build "+str(datetime.date.fromtimestamp(os.path.getmtime(sys.argv[0])))+")"
+
+longVersion="""
+                             +------------+
++----------------------------+ MultiFREAD +----------------------------+
+                             +------------+
+
+          MultiFREAD : FRAGMENT-BASED MULTIPLE LOOP MODELLING
+        copyright 2011-2012 Sebastian Kelm <kelm@stats.ox.ac.uk>
+
+              Version {version}
+
+      The "prosci" Python library, used extensively by PyFREAD, is
+        copyright 2007-2012 Sebastian Kelm
+
+      PyFREAD's implementation of Cyclic Co-ordinate Descent is
+        copyright 2011 Yoonjoo Choi        (prototype)
+        copyright 2011 Sebastian Kelm      (C++ implementation)
+
+      CCD for protein loop closure was first described in
+        Canutescu AA, Dunbrack RL (2003) Protein Sci., 12(5):963–972
+
+      PyFREAD is based on the FREAD algorithm described in
+        Choi Y, Deane CM (2010) Proteins, 78(6):1431-40
+        Deane CM, Blundell TL (2001) Protein Sci., 10(3):599-612
+
+                          All rights reserved.
+                This program is free for academic use.
+           Commercial use requires the author's permission.
+
+          For feedback, bug reports and questions contact:
+                Sebastian Kelm <kelm@stats.ox.ac.uk>
+
+""".format(version=VERSION) 
+
+USAGE="""
+multifread [OPTIONS] <db_dir> <pdb_file> <complete_sequence>
+
+<db_dir>
+        Root directory of FREAD's loop database
+
+<pdb_file>
+        Query PDB file with or without missing bits. FREAD detects
+        automatically if your specified loop is present in the file. These
+        coordinates are then ignored, except for reporting each decoy's 
+        RMSD to this structure.
+
+<complete_sequence>
+        The amino acid sequence of the entire protein. Residues without
+        corresponding 3D co-ordinates should be in lower case (these will 
+        be modelled using FREAD), all other residues in upper case.
+
+"""
+
+def val(*args):
+  for a in args:
+    if a is not None:
+      return a
+  return None
+
+
+# if __name__ == '__main__':
+def main():
+    parser = OptionParser(version=longVersion, usage=USAGE)
+
+    parser.add_option("--esst", dest="esst", action="store",
+                      default=os.path.join(scriptpath, 'esst.txt'),
+                      help="Load environment-specific substitution tables from specified file, rather than from the default location ('esst.txt' in fread directory).")
+
+    parser.add_option("--strucdir", dest="strucdir", default="decoys",
+                      action="store", help="Name the prefix to be used for output directories containing loop decoy structures.")
+
+    parser.add_option("--nostrucdir", dest="nostrucdir", default=False,
+                      action="store_true",
+                      help="Disables structure output apart from the complete model. Overrides --strucdir.")
+                      
+    parser.add_option("--summary", dest="summary", default="summary.table", 
+                      action="store", help="Write search summary to specified file, suffixed with 'XX.table', where XX is the number of the loop.")
+
+    parser.add_option("-v", "--verbose", dest="verbose", default=False,
+                      action="store_true", help="Print status messages to the file specified by --messages.")
+
+    parser.add_option("--messages", dest="messages", default="-", 
+                      action="store",
+                      help="Redirect status messages to the specified file.")
+
+    parser.add_option("--first_decoys", dest="first_decoys", type="int", 
+                      default=0, action="store", 
+                      help=" Stops the search after finding INT decoys matching the search criteria. This means that the results will not necessarily be the best possible ones present in the database, but will result in significant speed-ups when cut-offs are loose.")
+
+    parser.add_option("--open_rmsd", dest="open_rmsd", type="float", 
+                      default=1.0, action="store",
+                      help="Set the anchor RMSD cut-off to FLOAT.")
+
+    parser.add_option("--score", dest="score", type="int", action="store",
+                      default=25,
+                      help="Set substitution score cut-off to specified integer. If the given sequence cannot possibly attain this cut-off score, the cut-off is lowered to allow perfect matches to be found.")
+
+    parser.add_option("--nomeld", dest="nomeld", default=False, 
+                      action="store_true",
+                      help="Do not meld loop anchors. This means all loops are closed instead, unless the --noclose option is given.")
+
+    parser.add_option("--noclose", dest="noclose", default=False, 
+                      action="store_true", 
+                      help="Do not close loops. This means if you set --open_rmsd too high, you will get loops that do not fit the input model's anchors.")
+
+    parser.add_option("--closed_rmsd", dest="closed_rmsd", type="float", 
+                      default=0.3, action="store",
+                      help="Set the anchor RMSD cut-off after loop closure to specified float (default is 0.3). Note that the target anchor RMSD during loop closure is 0.15. Setting this cut-off lower than 0.15 will thus result in almost zero coverage.")
+
+    parser.add_option("--max_melding_rmsd", dest="max_melding_rmsd", 
+                      type="float", default=1.0, action="store", 
+                      help="Set the RMSD cut-off that decides when to use melding and when to use loop closure.")
+
+    parser.add_option("--vdw_factor", dest="vdw_factor", type="float", 
+                      default=0.7, action="store",
+                      help="Set factor for Van der Waal's radii to FLOAT. If a clash is detected, the loop is discarded. A value <= 0 disables clash checking.")
+
+    parser.add_option("--extension_max", dest="extension_max", type="int", 
+                      default=1000000, action="store",
+                      help="If no hits are found, the loop is extended by one residue on each end and the search repeated. INT is the maximum number of times this extension should happen before giving up. A value of INT <= 0 disables loop extension.")
+
+    parser.add_option("--extension_min", dest="extension_min", type="int",
+                      default=0, action="store",
+                      help="Extend loop INT times before the first modelling attempt. Do not even try searching the database for matches shorter than that. This does not count towards the limit imposed by --extension.")
+
+    parser.add_option("--output_file", dest="outfile", action="store",
+                      default="multifread",
+                      help="Specify the naming convention for output structure files.") 
+
+    parser.add_option("--max_decoys", dest="max_decoys", action="store",
+                      type="int", default=10,
+                      help="Specify the maximum number of decoys to retain for each gap in the input structure. Higher numbers mean longer running times.")
+    
+    parser.add_option("--top_models", dest="top_models", action="store",
+                      type="int", default=1,
+                      help="Specify the maximum number of modeled structures to output. Higher numbers mean longer running times. Default: 1.")
+
+    parser.add_option("-j", dest="pool_size", action="store", type="int",
+                      default=1,
+                      help="Specify the number of processes to allocate to multifread. A value of -1 will allocate as many processes as the host machine has processor cores.")
+
+    parser.add_option("--debug", dest="debug", action="store_true",
+                      default=False,
+                      help="Enable debug mode (1 process only)")
+    
+    parser.add_option("--contacts", dest="contacts", default=False, action="store_true",
+                      help="Calculate residue contacts for each loop within the input structure and compare them to the fragment's native contacts.")
+    
+    parser.add_option("--contact_identity", dest="contact_identity", type="float",
+                      default=0.8,
+                      help="Minimum fraction of matching contacts needed to accept a loop.")
+    
+    
+    try:
+        (opts, args) = parser.parse_args()
+    except RuntimeError:
+        print "Error parsing command line arguments."
+    
+    if len(args) < 3:
+        parser.print_help()
+        sys.exit(1)
+    
+    dbdir, target_structure, target_sequence = args
+    
+    
+    mf = MultiFread(target_structure, target_sequence)
+    
+    
+    mf.score_cutoff = opts.score
+    mf.open_rmsd_cutoff = opts.open_rmsd
+    mf.closed_rmsd_cutoff = opts.closed_rmsd
+    mf.vdw_factor = opts.vdw_factor
+    #mf.close = not opts.noclose
+    #mf.meld = not opts.nomeld
+    mf.verbose = opts.verbose
+    mf.max_melding_rmsd = opts.max_melding_rmsd
+    mf.set_subst_tables(opts.esst)
+    #mf.set_structure(target_structure)
+    mf.calculate_contacts = opts.contacts
+    mf.contact_identity = opts.contact_identity
+    
+    mf.model_structure(db=dbdir,
+                       nostrucdir=opts.nostrucdir, 
+                       noclose=opts.noclose, 
+                       nomeld=opts.nomeld,
+                       summary=opts.summary,
+                       messages=opts.messages,
+                       extension_max=opts.extension_max,
+                       extension_min=opts.extension_min,
+                       max_decoys=opts.max_decoys,
+                       first_decoys=opts.first_decoys,
+                       outfile=opts.outfile,
+                       top_models=opts.top_models,
+                       pool_size=opts.pool_size,
+                       strucdir=opts.strucdir,
+                       debug=opts.debug)
+
+if __name__ == '__main__':
+    main()

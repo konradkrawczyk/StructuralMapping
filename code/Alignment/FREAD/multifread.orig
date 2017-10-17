@@ -1,0 +1,372 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+
+import sys
+import os
+import datetime
+from optparse import OptionParser
+from multiprocessing import Pool
+
+# Make sure we can import stuff from this file's directory
+sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])), "lib-python")))
+sys.path.extend(os.environ['PATH'].split(':'))
+
+from prosci.util.residue import ResidueList
+from prosci.loops import fread
+from prosci.loops.loopmodel import calculate_rmsd, ANCHOR_LENGTH
+scriptpath = os.path.dirname(sys.argv[0])
+
+VERSION = "1.00 (build "+str(datetime.date.fromtimestamp(os.path.getmtime(sys.argv[0])))+")"
+
+longVersion="""
+                             +------------+
++----------------------------+ MultiFREAD +----------------------------+
+                             +------------+
+
+          MultiFREAD : FRAGMENT-BASED MULTIPLE LOOP MODELLING
+          copyright 2011 Sebastian Kelm <kelm@stats.ox.ac.uk>
+
+                     Version {version}
+
+      The "prosci" Python library is
+        copyright 2007,2008,2009,2010,2011 Sebastian Kelm
+
+      The present implementation of Cyclic Co-ordinate Descent is
+        copyright 2011 Yoonjoo Choi        (first implementation)
+        copyright 2011 Sebastian Kelm      (C++ port & integration)
+
+      The FREAD algorithm is
+        copyright 1999 Charlotte M. Deane  (original author)
+        copyright 2009 Yoonjoo Choi        (major revision)
+
+                          All rights reserved.
+                This program is free for academic use only.
+
+          For feedback, bug reports and questions contact:
+                Sebastian Kelm <kelm@stats.ox.ac.uk>
+
+""".format(version=VERSION) 
+
+USAGE="""
+multifread [OPTIONS] <db_dir> <pdb_file> <complete_sequence> <out_filename>
+
+<db_dir>
+        Root directory of FREAD's loop database
+
+<pdb_file>
+        Query PDB file with or without missing bits. FREAD detects
+        automatically if your specified loop is present in the file. These
+        coordinates are then ignored, except for reporting each decoy's 
+        RMSD to this structure.
+
+<complete_sequence>
+        The amino acid sequence of the entire protein. Residues without
+        corresponding 3D co-ordinates should be in lower case (these will 
+        be modelled using FREAD), all other residues in upper case.
+
+<out_filename>
+        Filename of the complete model PDB file to be created.
+                                
+"""
+def model_loop(start_of_loop, loop_sequence, loopprefix, loopsuffix):
+  for db_group in dbdir.split(":"):
+    databases = db_group.split("|")
+    frd.set_db(databases[0])
+
+    try:
+      frd.set_loop(start_of_loop, loop_sequence.upper())
+    except fread.FreadError:
+      break
+    
+    # Extend loop if extension_minimum is set
+    #
+    for i in xrange(extension_minimum):
+      try:
+        frd.extend_loop()
+      except fread.FreadError:
+        break
+    
+    # Try to model, and extend loop if nothing was found
+    anyresults = False
+    for db in databases:
+      frd.set_db(db)
+      try:
+        anyresults |= bool(frd.model(top=max_decoys, stop_after=first_decoys))
+      except fread.FreadError:
+        break
+    
+    for i in xrange(extension_size):
+      if anyresults:
+        break
+      try:
+        frd.extend_loop()
+      except fread.FreadError:
+        break
+      for db in databases:
+        frd.set_db(db)
+        anyresults |= bool(frd.model(top=max_decoys, stop_after=first_decoys))
+    
+    #if anyresults:
+    #  break
+  
+  # Write results to STDOUT or a file, if one was specified
+  if summary_file_name:
+    outstream = open(summary_file_name+loopsuffix+".table", "w")
+    frd.write_summary(outstream)
+    outstream.close()
+
+  if out_dir_name:
+    frd.write_decoy_structures(out_dir_name 
+                               +loopsuffix, suffix=".loop.pdb")
+    frd.write_model_structures(out_dir_name
+                               +loopsuffix, suffix=".model.pdb")
+  
+  return frd.results
+
+if __name__ == '__main__':
+    parser = OptionParser(version=longVersion, usage=USAGE)
+
+    parser.add_option("--esst", dest="esst", action="store",
+                      default=os.path.join(scriptpath, 'esst.txt'),
+                      help="Load environment-specific substitution tables from \
+    specified file, rather than from the default location ('esst.txt' in fread \
+    directory).")
+
+    parser.add_option("--strucdir", dest="strucdir", default="decoys",
+                      action="store")
+
+    parser.add_option("--nostrucdir", dest="nostrucdir", default=False,
+                      action="store_true",
+                      help="Disables structure output apart from the complete \
+    model. Overrides --strucdir.")
+                      
+    parser.add_option("--summary", dest="summary", default="summary", 
+                      action="store", help="Write search summary to specified \
+    file, suffixed with 'XX.table', where XX is the number of the loop.")
+
+    parser.add_option("-v", "--verbose", dest="verbose", default=False,
+                      action="store_true", help="Print status messages to the \
+    file specified by --messages.")
+
+    parser.add_option("--messages", dest="messages", default="-", 
+                      action="store",
+                      help="Redirect status messages to the specified file.")
+
+    parser.add_option("--max_decoys", dest="max_decoys", type="int", 
+                      default=100,
+                      action="store", help="Keep only the specified number of \
+    top-ranked decoys. Increasing this number may result in higher memory \
+    usage if you use very loose anchor RMSD and sequence score cut-offs.")
+
+    parser.add_option("--first_decoys", dest="first_decoys", type="int", 
+                      default=0, action="store", 
+                      help=" Stops the search after finding INT \
+    decoys matching the search criteria. This means that the results will not \
+    necessarily be the best possible ones present in the database, but will \
+    result in significant speed-ups when cut-offs are loose.")
+
+    parser.add_option("--open_rmsd", dest="open_rmsd", type="float", 
+                      default=1.0, action="store",
+                      help="Set the anchor RMSD cut-off to FLOAT.")
+
+    parser.add_option("--score", dest="score", type="int", action="store",
+                      default=25,
+                      help="Set substitution score cut-off to specified \
+    integer. If the given sequence cannot possibly attain this cut-off score, \
+    the cut-off is lowered to allow perfect matches to be found.")
+
+    parser.add_option("--nomeld", dest="nomeld", default=False, 
+                      action="store_true",
+                      help="Do not meld loop anchors. This means all loops are \
+    closed instead, unless the --noclose option is given.")
+
+    parser.add_option("--noclose", dest="noclose", default=False, 
+                      action="store_true", 
+                      help="Do not close loops. This means if you set \
+    --open_rmsd too high, you will get loops that do not fit the input \
+    model's anchors.")
+
+    parser.add_option("--closed_rmsd", dest="closed_rmsd", type="float", 
+                      default=0.3, action="store",
+                      help="Set the anchor RMSD cut-off after loop closure to \
+    specified float (default is 0.3). Note that the target anchor RMSD during \
+    loop closure is 0.15. Setting this cut-off lower than 0.15 will thus \
+    result in almost zero coverage.")
+
+    parser.add_option("--max_melding_rmsd", dest="max_melding_rmsd", 
+                      type="float", default=1.0, action="store", 
+                      help="Set the RMSD cut-off that decides when to use \
+    melding and when to use loop closure.")
+
+    parser.add_option("--vdw_factor", dest="vdw_factor", type="float", 
+                      default=0.7, action="store",
+                      help="Set factor for Van der Waal's radii to FLOAT. If a \
+    clash is detected, the loop is discarded. A value <= 0 disables clash \
+    checking.")
+
+    parser.add_option("--extension", dest="extension", type="int", 
+                      default=1000000, action="store",
+                      help="If no hits are found, the loop is extended by one \
+    residue on each end and the search repeated. INT is the maximum number of \
+    times this extension should happen before giving up. A value of INT <= 0 \
+    disables loop extension.")
+
+    parser.add_option("--extension_min", dest="extension_min", type="int",
+                      default=0, action="store",
+                      help="Extend loop INT times before the first modelling \
+    attempt. Do not even try searching the database for matches shorter than \
+    that. This does not count towards the limit imposed by --extension.")
+
+    parser.add_option("--sequence_file", dest="seq_file", action="store_true",
+                      help="Specify a text file containing the target sequence \
+    instead of passing the sequence as a command line argument.")
+                      
+    parser.add_option("-j", dest="pool_size", action="store", type="int",
+                      default=1,
+                      help="Specify the number of processes to allocate to \
+    multifread. A value lower than 1 will allocate as many processes as the \
+    host machine has processor cores.")
+
+    try:
+        (opts, args) = parser.parse_args()
+    except: RuntimeError
+    
+    if len(args) != 4:
+        parser.print_help()
+        sys.exit(1)
+
+    dbdir, target_structure, target_sequence, outfile = args
+    summary_file_name = opts.summary
+    message_file_name = opts.messages
+    subst_table_path = opts.esst
+    extension_size = opts.extension
+    extension_minimum = opts.extension_min
+    max_decoys = opts.max_decoys
+    first_decoys = opts.first_decoys
+    
+    try:
+        f = open(target_sequence)
+        target_sequence = f.read().strip('\n')
+    except:
+        pass
+
+    if opts.nostrucdir:
+        out_dir_name = None
+    else:
+        out_dir_name = opts.strucdir
+
+    frd = fread.Fread()
+
+    if message_file_name != "-":
+        frd.errstream = open(message_file_name, "w")
+
+    frd.score_cutoff = opts.score
+    frd.open_rmsd_cutoff = opts.open_rmsd
+    frd.closed_rmsd_cutoff = opts.closed_rmsd
+    frd.vdw_factor = opts.vdw_factor
+    frd.close = not opts.noclose
+    frd.meld = not opts.nomeld
+    frd.verbose = opts.verbose
+    frd.max_melding_rmsd = opts.max_melding_rmsd
+    # frd.no_structure_output = not bool(out_dir_name)
+    frd.set_subst_tables(subst_table_path)
+    frd.set_structure(target_structure)
+
+    ## Map structure to sequence and index all loops to be modelled ##
+    in_model = frd.residues
+    out_model = ResidueList([])
+    n=0
+    loops = []
+    loop_start = -1
+    
+    for i,c in enumerate(target_sequence): 
+        if c.isupper():
+            try:
+              out_model.append(in_model[n])
+            except IndexError:
+              frd.errstream.write("Sequence cannot be mapped to structure. Sequence has more upper case letters than residues present in structure.\n")
+              sys.exit(1)
+            if loop_start >= 0:
+              loops.append((loop_start, i, n))
+              loop_start = -1
+            n+=1
+        else:
+            out_model.append(None)
+            if loop_start < 0:
+                loop_start = i
+    
+    # Remove N-terminal loop
+    if loops and loops[0][0] == 0: # Why?
+        del loops[0]
+
+    assert len(out_model) == len(target_sequence)
+    
+    if opts.pool_size == 1:
+        decoys = []
+        for i, (start, end, gappystart) in enumerate(loops):
+            n = target_structure.rfind('/')
+            loopprefix = target_structure[n+1:].strip('.pdb')
+            decoys.append(model_loop(gappystart, 
+                                     target_sequence[start:end], 
+                                     loopprefix,
+                                     "%02d"%i))
+    else:
+        if opts.pool_size <= 0:
+          pool = Pool()
+        else:
+          pool = Pool(opts.pool_size)
+
+        jobs = []
+
+        for i, (start, end, gappystart) in enumerate(loops):
+            n = target_structure.rfind('/')
+            loopprefix = target_structure[n+1:].strip('.pdb')
+            jobs.append(pool.apply_async(model_loop,
+                                         args=(gappystart,
+                                               target_sequence[start:end],
+                                               loopprefix,
+                                               "%02d"%i,)))
+        pool.close()
+        pool.join()
+        decoys = [i.get() for i in jobs]
+
+    topcombo = [results[0] if results else None for results in decoys]
+    
+    ## Insert winning combination into model and output model ##
+    for (start, end, gappystart), decoy in zip(loops, topcombo):
+        if not decoy:
+            continue
+        
+        # Insert co-ordinates of the top-ranking loop decoy into model
+        #
+        offset = (decoy.length + start - end) / 2
+        for j,i in enumerate(xrange(start-offset, start-offset+decoy.length)):
+            r = out_model[i] = decoy.loop[j]
+            minb = (decoy.nanchor[-1].CA.b + decoy.canchor[0].CA.b) / 2.0
+            for a in r:
+                a.b = max(minb, a.b)
+        
+        # Replace anchor co-ordinates
+        #
+        for j,i in enumerate(xrange(start-offset-len(decoy.nanchor), 
+                                    start-offset)):
+            out_model[i] = decoy.nanchor[j]
+        
+        for j,i in enumerate(xrange(start-offset+decoy.length, 
+                             start-offset+decoy.length+len(decoy.canchor))):
+            out_model[i] = decoy.canchor[j]
+
+    ## Write out final model ##
+    f = open(outfile, 'w')
+    f.write(str(out_model))
+    f.close()
+    
+    # print out_model
+
+    if frd.verbose:
+        frd.errstream.write("Finished\n")
+
+    if message_file_name != "-":
+        frd.errstream.close()

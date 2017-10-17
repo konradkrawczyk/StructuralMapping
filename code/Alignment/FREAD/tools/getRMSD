@@ -1,0 +1,8 @@
+#!/usr/bin/env python26
+
+import sys
+from tools import getRMSD
+
+ref, mobile = sys.argv[1], sys.argv[2]
+
+print getRMSD(ref, mobile)

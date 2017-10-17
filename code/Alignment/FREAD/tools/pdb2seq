@@ -1,0 +1,8 @@
+#!/usr/bin/python26
+
+import sys
+from prosci.util.residue import ResidueList
+
+if __name__ == '__main__':
+    pdb_file = sys.argv[1]
+    print ResidueList(pdb_file).get_seq()

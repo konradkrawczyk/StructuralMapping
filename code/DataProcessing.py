@@ -21,6 +21,7 @@ def update_sabdab():
 	lights = {}
 	prog = 0
 	for ab in antibodies:
+		
 		prog+=1
 		print "[DataProcessing.py] Renumbering SABDAB ",prog,'out of ',len(antibodies),'antibodies'
 		if ab['H']!=None:
@@ -63,6 +64,7 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 		if len(sequences)> chunk_size:
 			number_and_save(sequences,experiment_name)
 			sequences = {}
+	
 	#See if we got any leftovers
 	if len(sequences)> 0:
 		number_and_save(sequences,experiment_name)

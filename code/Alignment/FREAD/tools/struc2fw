@@ -1,0 +1,19 @@
+#!/usr/bin/python26
+
+import os
+import sys
+from prosci.util.residue import ResidueList
+
+if __name__ == '__main__':
+    strucFile, seq = sys.argv[1], sys.argv[2]
+    struc = ResidueList(strucFile)
+    seq = open(seq).readlines()[0].strip('\n')
+
+    inLoop = [c.islower() for c in seq]
+
+    assert len(inLoop) == len(struc)
+    for i in xrange(len(inLoop)):
+        if inLoop[i]:
+            struc[i] = None
+
+    print(str(struc))

@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+
+import sys
+from tools import fasta2seq
+
+args = sys.argv[1:]
+if len(args) != 2:
+    sys.exit(1)
+
+fasta, struc = None, None
+
+for arg in args:
+    if arg[arg.rfind('.'):] == '.fasta':
+        fasta = arg
+    if arg[arg.rfind('.'):] == '.pdb':
+        struc = arg
+
+# Exit if no fasta or struc
+if not fasta or not struc:
+    sys.exit(1)
+
+print fasta2seq(fasta, struc)

@@ -18,6 +18,9 @@ def random_filename():
 #Where the numbered_datasets are stored
 numbered_datasets_location = '../data/numbered'
 structural_map_location = '../data/structuralmap'
+aggregates_location = '../data/aggregates'
+#Where the structures of the PDBs are stored ( for FREAD comparisons.)
+structures_location = '../data/structures'
 
 
 ############
@@ -36,6 +39,7 @@ definitions = {
 
 
 #Is this a CDR? If so tell which.
+#e.g. res is "L52", do not supply insertion.
 def is_CDR(res,deff='chothia'):
 	for CDR in definitions[deff]:
 		if res in definitions[deff][CDR]:

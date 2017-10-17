@@ -1,7 +1,10 @@
 #Handling some of the tasks related to pre-processing sabdab data before structural mapping.
 from Common.Common import structures_location,is_CDR
+
 import os
 from os.path import join
+from StructuralAlignment import structural_reference
+from DataManagement.SAbDab import structural_reference
 
 #All paths are relative wrt root directory.
 structures_location = '../'+structures_location
@@ -15,6 +18,9 @@ def constrain_structure(HL_chain,pdb_chain,pdb):
 	pdb_location = join(structures_location,pdb,'structure','chothia',pdb+'.pdb')
 	#Our output file is in the same chothia location but called differently.
 	output_location = join(structures_location,pdb,'structure','chothia',pdb+pdb_chain+'_no_cdrs.pdb')
+	#Do not redo computational effort.
+	if os.path.exists(output_location):
+		return
 	output_file = open(output_location,'w')
 	for line in open(pdb_location):
 		if line[0:4]!='ATOM':
@@ -42,4 +48,18 @@ def constrain_structure(HL_chain,pdb_chain,pdb):
 		
 
 if __name__ == '__main__':
-	constrain_structure('H','B','1ahw')
+	#constrain_structure('H','B','1ahw')
+	strucs = structural_reference()
+	
+	for s in strucs:
+		pdb = s
+		pdb_chain = s[4]
+		target_chain = strucs[s][1]
+		if target_chain == 'K':
+			target_chain = 'L'
+		pdb = pdb[0:4]
+		print pdb,pdb_chain,target_chain
+		try:
+			constrain_structure(target_chain,pdb_chain,pdb)
+		except:
+			pass

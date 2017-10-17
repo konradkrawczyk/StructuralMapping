@@ -3,19 +3,10 @@ from os import listdir
 from os.path import join
 from Alignment.Align import align_sequences
 from Common.Common import get_sequence,numbered_datasets_location,structural_map_location
+from DataManagement.SAbDab import structural_reference
 import json
 
-#This can be loaded in whole.
-def structural_reference():
-	source = join(numbered_datasets_location,'sabdab')
-	all_strucs = {}
-	for chunk in listdir(source):
-		print "Loading Structures chunk",chunk
-		d = pickle.load(open(join(source,chunk)))
-		for pdb in d:
-			all_strucs[pdb] = d[pdb]
-		
-	return all_strucs
+
 
 #Find the best sequence identity and the corresponding template.
 def get_best_match(query,structures,region=None):
@@ -71,21 +62,39 @@ def perform_comparison(sample_name,structures,start,end):
 		f = open(join(structural_map_location,sample_name,chunk+'.json'),'w')
 		f.write(js)
 		f.close()
-		
 
 if __name__ == '__main__':
 	
-	strucs = structural_reference()
-	start = 1
-	end = 3
-	exp_name = 'KELLY_HEPB_BOOSTER'
-	results_directory = join(structural_map_location,exp_name)
-	#Check if directory to save results exists.
-	if not os.path.exists(results_directory):
-		os.mkdir(results_directory)
-	print "Got",len(strucs),'structures to compare against.'
+
+	import sys
+	cmd = sys.argv[1]
+
+	#Usage: python StructuralAlignment.py parallel [experiment name] number-of-cpus
+	if cmd == 'parallel':
+		exp_name = sys.argv[2]
+		ncpus = float(sys.argv[3])
+		#Figure out how many chunks there are to process.
+		nchunks = len(listdir(join(numbered_datasets_location,exp_name)))
+		dchunk = int(float(nchunks)/ncpus)
+		done_chunks = 0
+		while done_chunks<nchunks:
+			print 'python StructuralAlignment.py structurallymap ',exp_name,' ',done_chunks,' ',done_chunks+dchunk,' &'
+			done_chunks+=dchunk
+			
+
+	if cmd == 'structurallymap':
+		strucs = structural_reference()
+		
+		exp_name = sys.argv[2]
+		start = int(sys.argv[3])
+		end =int(sys.argv[4])
+		results_directory = join(structural_map_location,exp_name)
+		#Check if directory to save results exists.
+		if not os.path.exists(results_directory):
+			os.mkdir(results_directory)
+		print "Got",len(strucs),'structures to compare against.'
 	
-	perform_comparison(exp_name,strucs,start,end)
+		perform_comparison(exp_name,strucs,start,end)
 		
 
 	#Load structural reference.

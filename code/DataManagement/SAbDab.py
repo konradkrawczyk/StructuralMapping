@@ -1,7 +1,15 @@
 import pprint
+from Common.Common import numbered_datasets_location
+import os
+from os.path import join
+from os import listdir
+import pickle
 ####################
 ##Sequence Retrieval
 ####################
+
+#Everything is one level in relation to root.
+numbered_datasets_location = '../'+numbered_datasets_location
 
 #For now this is a dummy before a suitable API is available.
 def fetch_sabdab_seqs():
@@ -24,9 +32,19 @@ def fetch_sabdab_seqs():
 			
 		structures.append(single_fab)
 
-	
 	return structures
 
+#This can be loaded in whole.
+def structural_reference():
+	source = join(numbered_datasets_location,'sabdab')
+	all_strucs = {}
+	for chunk in listdir(source):
+		print "Loading Structures chunk",chunk
+		d = pickle.load(open(join(source,chunk)))
+		for pdb in d:
+			all_strucs[pdb] = d[pdb]
+		
+	return all_strucs
 
 if __name__ == '__main__':
 	strucs = fetch_sabdab_seqs()
