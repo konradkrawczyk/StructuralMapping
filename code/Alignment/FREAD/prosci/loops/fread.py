@@ -801,7 +801,7 @@ class Fread(object):
           self.write_decoy_structures(strucdir + loopsuffix, suffix=".loop.pdb", idfilter = idfilter)
         if write_models:
           self.write_model_structures(strucdir + loopsuffix, suffix=".model.pdb", idfilter = idfilter)
-      
+     
       return self.results
 
 

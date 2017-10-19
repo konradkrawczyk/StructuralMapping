@@ -2,6 +2,7 @@ import os,pickle
 from os import listdir
 from os.path import join
 from Alignment.Align import align_sequences
+from Alignment.LoopAlignment import
 from Common.Common import get_sequence,numbered_datasets_location,structural_map_location
 from DataManagement.SAbDab import structural_reference
 import json
@@ -46,6 +47,8 @@ def perform_comparison(sample_name,structures,start,end):
 			
 			#Get best full-sequence match.
 			full_results = get_best_match(query,structures)
+			print full_results
+			quit()
 			#Get best framework match. False region stands for 'not CDR' ergo framework
 			frame_results = get_best_match(query,structures,region=[False])
 			#Get best CDR match.
@@ -83,11 +86,26 @@ if __name__ == '__main__':
 			
 
 	if cmd == 'structurallymap':
+		
 		strucs = structural_reference()
 		
 		exp_name = sys.argv[2]
 		start = int(sys.argv[3])
 		end =int(sys.argv[4])
+		results_directory = join(structural_map_location,exp_name)
+		#Check if directory to save results exists.
+		if not os.path.exists(results_directory):
+			os.mkdir(results_directory)
+		print "Got",len(strucs),'structures to compare against.'
+	
+		perform_comparison(exp_name,strucs,start,end)
+	
+	if cmd == 'debug':
+		strucs = structural_reference()
+		
+		exp_name = 'sample'
+		start = 1
+		end =3
 		results_directory = join(structural_map_location,exp_name)
 		#Check if directory to save results exists.
 		if not os.path.exists(results_directory):

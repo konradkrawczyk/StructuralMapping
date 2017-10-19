@@ -9,7 +9,7 @@ import pickle
 ####################
 
 #Everything is one level in relation to root.
-numbered_datasets_location = '../'+numbered_datasets_location
+#numbered_datasets_location = numbered_datasets_location
 
 #For now this is a dummy before a suitable API is available.
 def fetch_sabdab_seqs():

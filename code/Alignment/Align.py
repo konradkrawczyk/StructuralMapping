@@ -43,8 +43,9 @@ def align_sequences(query, template,region=None):
 if __name__ == '__main__':
 
 	#Test aligning
-	sqs = pickle.load(open('../../data/numbered/sabdab/704057578313450684'))
+	sqs = pickle.load(open('../../data/numbered/sabdab/33521738752628595'))
 	
-	align_sequences(sqs['2dqiH'][0],sqs['4z5rS'][0],region="H3")
+	
+	print align_sequences(sqs['1ub5B'][0],sqs['1ub5B'][0])
 
 	pass

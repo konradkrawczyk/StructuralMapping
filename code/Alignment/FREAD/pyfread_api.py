@@ -157,7 +157,7 @@ def run_fread(dbdir,pdb_file,start_of_loop,loop_sequence,chain,output_file):
     
     frd.set_structure(pdb_file)
    
-    frd.automodel_loop(start_of_loop, loop_sequence,
+    return frd.automodel_loop(start_of_loop, loop_sequence,
         loopsuffix = "",#Default
         resnum = True,#TODO this is NOT as in defualts, but I do not see why we would always got for 'array numbering' rather than native array numbering.
         chain = chain,
@@ -166,19 +166,14 @@ def run_fread(dbdir,pdb_file,start_of_loop,loop_sequence,chain,output_file):
         strucdir = 'decoys',#Default
         summary_file_name = output_file,#Not default
         max_decoys = 100,#Defualt
-        first_decoys = 3,#Default
+        first_decoys = 100,#Default
         extension_size = 1000000,#Default
         extension_minimum = 0,#Default
         write_decoys =False,#Default
         write_models = False,#Default
         write_decoy_sequence = False,#Default
         idfilter = "")#default 
-    
-    
-    frd.note("Finished")
-    
-    frd.close_errstream()
-
+  
 
 def main():
     
@@ -341,11 +336,9 @@ def main():
     frd.set_subst_tables(opts.esst)
     
     frd.set_structure(pdb_file)
-    import pprint
-    pprint.pprint(opts)
-    quit()
+    
    
-    frd.automodel_loop(start_of_loop, loop_sequence,
+    return frd.automodel_loop(start_of_loop, loop_sequence,
         loopsuffix = opts.loopsuffix,
         resnum = opts.resnum,
         chain = opts.chain,
@@ -363,9 +356,7 @@ def main():
         idfilter = idfilter)
     
     
-    frd.note("Finished")
     
-    frd.close_errstream()
 
 
 if __name__ == "__main__":
