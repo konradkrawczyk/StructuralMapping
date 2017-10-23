@@ -19,6 +19,15 @@ def fetch_sabdab_seqs():
 	
 	for pdb in database:
 		pdb_details = database.fetch(pdb) # get the details of a pdb in the database
+		
+		method =  pdb_details.get_method()
+		#Only X-Ray.
+		if method!= 'X-RAY DIFFRACTION':
+			continue
+		#Only resolution better than 3.0A
+		resolution = pdb_details.get_resolution()
+		if float(resolution)>3.0:
+			continue
 		raw_seqs =  pdb_details.get_raw_sequences()
 		single_fab = {'pdb':pdb,'pdb-h':None,'pdb-l':None,'H':None,'L':None}
 		for fab_details in pdb_details.get_fabs():
@@ -48,4 +57,5 @@ def structural_reference():
 
 if __name__ == '__main__':
 	strucs = fetch_sabdab_seqs()
-	pprint.pprint(strucs)
+	print "Got",len(strucs)
+	#pprint.pprint(strucs)
