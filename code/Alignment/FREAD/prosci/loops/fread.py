@@ -262,9 +262,6 @@ class Fread(object):
           self.extend_loop()
         except BadInputError:
           self.die(LoopStretchError(str(e)+" Cannot extend gap further."))
-    
-
-    
   
   def extend_loop(self):
       """Extend loop by one residue on each side. Raises NonConsecutiveAnchorError() or UnsupportedLoopLengthError() upon failure.
@@ -368,12 +365,10 @@ class Fread(object):
     
     self.note("Loop region: N(%4d, %4d)  C(%4d,%4d)  Loop(%3d,'%s')" % (start, start_of_loop, end_of_loop, end, loop_length, loop_sequence))
     
-    
     ############################################################################
     
                 # Get query anchors and prepare for clash checking #
     
-    print "Getting anchor coordinates."
     # Get anchor coordinates
     #
     anchor_N = residues[start:start_of_loop]
@@ -384,7 +379,6 @@ class Fread(object):
     #
     anchor_description, query_transform = describe_anchors(anchor_N, anchor_C, loop_length)
     
-    print "Building a geometric hash"
     # Build a GeometricHash of the query structure (without the loop region), for
     # clash checking
     #
@@ -398,7 +392,6 @@ class Fread(object):
     gh = GeometricHash(numpy.array(coords))
     del coords
     
-    print "Calculating inter-residue contacts"
     # Inter-residue contacts
     if self.calculate_contacts:
       p = Protein((residues[:start]+residues[end:]).split_chains())
@@ -417,9 +410,7 @@ class Fread(object):
     
     
     for decoy in iterate_database(self.db, loop_length, self.subst_tables, anchor_description, loop_sequence, self.open_rmsd_cutoff, self.score_cutoff):
-        # Structure-based steps: loop closure, clash check, more filtering #
-        print decoy.score,decoy.struc,decoy.seq
-	
+        
         if len(results) >= top:
           if decoy.internal_rmsd > results[0][-1].anchor_rmsd_open:
             continue
@@ -766,7 +757,7 @@ class Fread(object):
 	  
           self.set_db(db)
           try:
-	    print "First attempt"
+	    
             anyresults |= bool(self.model(f_rank_decoy=f_rank_decoy, f_stop_search=f_stop_search, f_filter=f_filter))
           except FreadError:
             break
@@ -780,7 +771,7 @@ class Fread(object):
             break
           for db in databases:
             self.set_db(db)
-	    print "Second attempt"
+	    
             anyresults |= bool(self.model(f_rank_decoy=f_rank_decoy, f_stop_search=f_stop_search, f_filter=f_filter))
         
         if anyresults:
@@ -795,7 +786,7 @@ class Fread(object):
           outstream = open(root + loopsuffix + ext, "w")
           self.write_summary(outstream, write_decoy_sequence=write_decoy_sequence)
           outstream.close()
-      
+       
       if not self.no_structure_output:
         if write_decoys:
           self.write_decoy_structures(strucdir + loopsuffix, suffix=".loop.pdb", idfilter = idfilter)

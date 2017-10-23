@@ -1,15 +1,16 @@
 import os,pickle
 from os import listdir
 from os.path import join
+#Aligning full variable region and frameworks.
 from Alignment.Align import align_sequences
-from Alignment.LoopAlignment import
+#Aligning CDRs.
+from Alignment.LoopAlignment import perform_loop_alignment,extract_cdrs
 from Common.Common import get_sequence,numbered_datasets_location,structural_map_location
 from DataManagement.SAbDab import structural_reference
 import json
 
-
-
-#Find the best sequence identity and the corresponding template.
+#Find the best sequence identity and the corresponding template -- this is chiefly used to get region annotatinos like full sequence, framework etc. 
+#CDRs can be done here BUT it is better to use a more nuanced approach using FREAD which is written in get_best_cdr_match
 def get_best_match(query,structures,region=None):
 	curr_best_sid = 0
 	curr_best_pdb = 0		
@@ -28,6 +29,18 @@ def get_best_match(query,structures,region=None):
 	#Results object	
 	results = {'best_sid':curr_best_sid,'best_pdb':curr_best_pdb}
 	return results
+
+#Given anchors, employ FREAD to get the best CDR-templates.
+def get_best_cdr_match(query,fread_template):
+	pickle.dump(query,open('sample_sequence.pckl','w'))
+	cdrs = extract_cdrs(query[0])
+	pdb_template = fread_template[0:4]
+	pdb_chain = fread_template[4]
+	cdr_results = {}
+	for cdr in cdrs:
+		cdr_results[cdr] = perform_loop_alignment(cdr,pdb_template,pdb_chain,cdrs[cdr])
+	return cdr_results
+	
 		
 #Go through all the chunks in the 
 def perform_comparison(sample_name,structures,start,end):
@@ -40,6 +53,7 @@ def perform_comparison(sample_name,structures,start,end):
 		if i<start or i>end:
 			continue  
 		d = pickle.load(open(join(source,chunk)))
+		print "Number of seqs in chunk",len(d)
 		chunk_results = {}
 		for query in d:
 			query_name = query
@@ -47,17 +61,24 @@ def perform_comparison(sample_name,structures,start,end):
 			
 			#Get best full-sequence match.
 			full_results = get_best_match(query,structures)
-			print full_results
-			quit()
 			#Get best framework match. False region stands for 'not CDR' ergo framework
 			frame_results = get_best_match(query,structures,region=[False])
-			#Get best CDR match.
+			#Get best CDR match -- full region.
 			cdr_results = get_best_match(query,structures,region=['H1','H2','H3','L1','L2','L3'])
+			#Get the nuanced-fread based hits for each CDR in turn.
+			fread_results = None
+			if 'best_pdb' in full_results:
+				try:
+					fread_results = get_best_cdr_match(query,full_results['best_pdb'])
+				except:
+					pass
+			print fread_results
+			
 			#print get_sequence(query[0])
 			#print 'FULL',full_results
 			#print 'Frame',frame_results
 			#print 'CDR',cdr_results
-			alignment_results = {'full':full_results,'frame':frame_results,'cdr':cdr_results}
+			alignment_results = {'full':full_results,'frame':frame_results,'cdr':cdr_results,'fread':fread_results}
 			chunk_results[query_name] = alignment_results
 		print "Dumping structural map results for chunk",chunk
 		#Json-format the results so they can be easily interpreted by different pieces of software.
@@ -68,7 +89,6 @@ def perform_comparison(sample_name,structures,start,end):
 
 if __name__ == '__main__':
 	
-
 	import sys
 	cmd = sys.argv[1]
 
@@ -83,7 +103,6 @@ if __name__ == '__main__':
 		while done_chunks<nchunks:
 			print 'python StructuralAlignment.py structurallymap ',exp_name,' ',done_chunks,' ',done_chunks+dchunk,' &'
 			done_chunks+=dchunk
-			
 
 	if cmd == 'structurallymap':
 		
@@ -105,7 +124,7 @@ if __name__ == '__main__':
 		
 		exp_name = 'sample'
 		start = 1
-		end =3
+		end =2
 		results_directory = join(structural_map_location,exp_name)
 		#Check if directory to save results exists.
 		if not os.path.exists(results_directory):
@@ -113,7 +132,6 @@ if __name__ == '__main__':
 		print "Got",len(strucs),'structures to compare against.'
 	
 		perform_comparison(exp_name,strucs,start,end)
-		
 
 	#Load structural reference.
 

@@ -13,12 +13,12 @@ import matplotlib
 colors = ['green','blue','magenta']
 
 def plot_rmsds(rmsds,sids,rmsderr,labels,title,ub,lb):
+
 	N = len(labels)
 	t = np.arange(N)
 	bar_width = 0.6
 
 	fig, ax1 = plt.subplots()
-	
 	
 	ax2 = ax1.twinx()
 	j = 0
@@ -45,15 +45,11 @@ def plot_rmsds(rmsds,sids,rmsderr,labels,title,ub,lb):
 	    tl.set_color('b')
 
 	print "Showing"
+	ax1.grid()
 	plt.show()
 	#plt.savefig("/homes/krawczyk/Downloads/Figures/"+title+".png")
 
-
-#def plot_bar(sids,labels):
-
-
 def get_coverage(exp_name,region):
-	
 	
 	#Load data.
 	data = json.load(open(join(aggregates_location,exp_name,'aggregate.json')))
@@ -73,7 +69,6 @@ def get_coverage(exp_name,region):
 			coverage_final.append((i,0))
 	plotdata =  zip(*sorted(coverage_final))
 	return plotdata
-	
 
 if __name__ == '__main__':
 	
