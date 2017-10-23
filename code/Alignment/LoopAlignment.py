@@ -29,8 +29,8 @@ def perform_loop_alignment(loop,template_pdb,template_chain,sequence):
 	db = '../data/fread_db/db_CDR'+loop
 
 	#Template location.
-	template = '../data/structures/'+template_pdb+'/structure/chothia/'+template_pdb+template_chain+'_no_cdrs.pdb'
-
+	template = '../data/structures/'+template_pdb+template_chain+'_no_cdrs.pdb'
+	print template
 	results = run_fread(db,template,loop_starts[loop],sequence,template_chain,'')
 
 	#Find the highest score one.

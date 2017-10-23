@@ -1,23 +1,20 @@
 #Handling some of the tasks related to pre-processing sabdab data before structural mapping.
-from Common.Common import structures_location,is_CDR
+from Common.Common import sabdab_location,structures_location,is_CDR
 
 import os
 from os.path import join
-from StructuralAlignment import structural_reference
 from DataManagement.SAbDab import structural_reference
-
-#All paths are relative wrt root directory.
-structures_location = '../'+structures_location
 
 #Given a PDb file -- remove the CDRs from it (according to Chothia definitions)
 #HL_chain -- indicate if the chain is heavy (H) or light (L)
 
 def constrain_structure(HL_chain,pdb_chain,pdb):
-
+	print "Constraining...",HL_chain,pdb_chain,pdb
 	#Chothia structures are stored in their special folder.
-	pdb_location = join(structures_location,pdb,'structure','chothia',pdb+'.pdb')
+	pdb_location = join(sabdab_location,pdb,'structure','chothia',pdb+'.pdb')
+	print pdb_location
 	#Our output file is in the same chothia location but called differently.
-	output_location = join(structures_location,pdb,'structure','chothia',pdb+pdb_chain+'_no_cdrs.pdb')
+	output_location = join(structures_location,pdb+pdb_chain+'_no_cdrs.pdb')
 	#Do not redo computational effort.
 	if os.path.exists(output_location):
 		return

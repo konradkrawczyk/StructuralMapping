@@ -21,6 +21,8 @@ structural_map_location = '../data/structuralmap'
 aggregates_location = '../data/aggregates'
 #Where the structures of the PDBs are stored ( for FREAD comparisons.)
 structures_location = '../data/structures'
+#Where is SAbDab?
+sabdab_location = '../../sabdab-sabpred/data/ABDB/entries/'
 
 
 ############
