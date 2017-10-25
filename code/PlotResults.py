@@ -10,6 +10,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib
 
+###############
+#FullSequence##
+###############
+
 colors = ['green','blue','magenta']
 
 def plot_rmsds(rmsds,sids,rmsderr,labels,title,ub,lb):
@@ -70,8 +74,8 @@ def get_coverage(exp_name,region):
 	plotdata =  zip(*sorted(coverage_final))
 	return plotdata
 
-if __name__ == '__main__':
-	
+#Plotting entire regions, full sequence, frame, three cdrs.
+def plot_region():
 	chain = 'H'
 	region = '_framework'
 
@@ -118,3 +122,66 @@ if __name__ == '__main__':
 	
 
 	#Display as histogram.
+
+
+#######
+#CDRs##
+#######
+
+def bar_plot():
+	import numpy as np
+	import matplotlib.pyplot as plt
+
+	#For aesthetic purposes
+	the_alpha = 0.4
+
+	#We always have three CDRs
+	N = 3
+	#CDR1, CDR2 and CDR3
+	can_model = (200, 350, 300)
+	cant_model = (200, 300, 400)
+	pdb = (20, 30, 40)
+	
+	ind = np.arange(N)  # the x locations for the groups
+	width = 0.3       # the width of the bars
+
+	fig, ax = plt.subplots()
+	#can model
+	rects1 = ax.bar(ind, can_model, width, color='g',alpha=the_alpha)
+	#cant model
+	rects2 = ax.bar(ind + width, cant_model, width, color='r',alpha=the_alpha)
+	#PDB
+	rects3 = ax.bar(ind + width+width, pdb, width, color='b',alpha=the_alpha)
+
+
+	# add some text for labels, title and axes ticks
+	ax.set_ylabel('#Loops')
+	ax.set_xlabel('CDR')
+	ax.set_title('How many loops can we model?')
+	ax.set_xticks(ind + width / 2)
+	ax.set_xticklabels(('H1', 'H2', 'H3'))
+	
+	ax.legend((rects1[0], rects2[0],rects3[0]), ('Can model', 'Cant model','In PDB'))
+
+
+	def autolabel(rects):
+	    """
+	    Attach a text label above each bar displaying its height
+	    """
+	    for rect in rects:
+		height = rect.get_height()
+		ax.text(rect.get_x() + rect.get_width()/2., 1.01*height,
+		        '%d' % int(height),
+		        ha='center', va='bottom')
+
+	autolabel(rects1)
+	autolabel(rects2)
+	autolabel(rects3)
+
+	plt.show()
+
+if __name__ == '__main__':
+
+	bar_plot()
+	
+	
