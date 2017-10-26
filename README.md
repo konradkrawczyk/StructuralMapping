@@ -60,15 +60,50 @@ python StructuralAlignment.py structurallymap sample
 
 This will save the results in data/structuralmap/[experiment name].
 
-### A.3 Results
+### B Results
 
-### B Parallelization of the protocol.
+Results stored under data/structuralmap/[experiment name] are a collection of json-formatted files with structural annotation for each sequences submitted. A given file is a list from sequence identifiers (as you have specified them in input) to results.
+
+For instance a single sequence has the following annotations:
+
+```
+"B_d075d1700ee60c141873c2069c4c2fdb": { <<--- ID of the sequence
+		"frame": { <<--- Best alignment results for Chothia framework region.
+			"best_pdb": "5v7rH", <<--- Best Chothia framework  region template (PDB + chain)
+			"best_sid": 87  <<--- Best Chothia framework  sequence identity (for template above)
+		},
+		"full": { <<--- Best alignment results for entire variable region
+			"best_pdb": "5v7rH", <<--- Best full variable region template (PDB + chain)
+			"best_sid": 76  <<--- Best Chothia framework  sequence identity (for template above)
+		},
+		"fread": { <<--- Best results for each specific CDR
+			"H2": { <<---CDR identifier
+				"qu": "SGDEGY",  <<---query sequence
+				"seq": "NGNSGY", <<---best sequence match according to FREAD -- None if none are found.
+				"str": "4n9gH", <<---structure the template is coming from.
+				"scr": 25 <<---score of this best template -- the higher the better.
+			},
+			"H3": {
+				"qu": "GSNDWYGIDY",
+				"seq": "DPLEYYGMDY",
+				"str": "1qkzH",
+				"scr": 35
+			},
+			"H1": {
+				"qu": "GFTFSNF",
+				"seq": "GFTFTNY",
+				"str": "1e4xI",
+				"scr": 49
+			}
+		},
+```
+### C Parallelization of the protocol.
 
 As you might've noticed, running this pipeline on a single thread on millions of sequences might not be optimal.
 
 For this reason for both steps 1 and 2, we have created utilities which create batch files for processing (multiple instances of the commands above which execute on different portions of the datasets).
 
-### B.1 Parallelize Chothia numbering.
+### C.1 Parallelize Chothia numbering.
 
 To get the parallelization script for step 1, Chothia numbering, the command is:
 
@@ -98,7 +133,7 @@ Now simply run the number_sequences.sh script which will kick off the 78 process
 chmod u+rx number_sequences.sh
 ```
 
-### B.2 Parallelize Structural mapping .
+### C.2 Parallelize Structural mapping .
 
 Logic is similar as with parallel Chothia numbering.
 
