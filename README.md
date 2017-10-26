@@ -7,7 +7,7 @@ This code is a protocol/pipeline for performing large-scale structural annotatio
 
 This code is designed to run ona Unix system (Linux or at the very least Os X). You **might** be able to run it on Windows, but I never tested it in such setup as I could not see a reasonable application for it.
 
-The code comes with pre-compiled versions of hmmer so that ANARCI can run.
+One thing you need to install yourself is Anarci (free software): http://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/ANARCI.php
 
 Otherwise it is supposed to work out of the box as described below. If it doesn't drop an email to konrad.krawczyk@stats.ox.ac.uk
 
