@@ -68,14 +68,18 @@ For instance a single sequence has the following annotations:
 
 ```
 "B_d075d1700ee60c141873c2069c4c2fdb": { <<--- ID of the sequence
-		"frame": { <<--- Best alignment results for Chothia framework region.
+		"frame": { <<--- Best Chothia alignment results for Chothia framework region.
 			"best_pdb": "5v7rH", <<--- Best Chothia framework  region template (PDB + chain)
 			"best_sid": 87  <<--- Best Chothia framework  sequence identity (for template above)
 		},
-		"full": { <<--- Best alignment results for entire variable region
+		"full": { <<--- Best Chothia alignment results for entire variable region
 			"best_pdb": "5v7rH", <<--- Best full variable region template (PDB + chain)
 			"best_sid": 76  <<--- Best Chothia framework  sequence identity (for template above)
 		},
+		"cdr": { <<--- Best Chothia alignment for all CDRs taken together.
+			"best_pdb": "4nikB", <<--- Template which best matches the three CDRs together.
+			"best_sid": 56 <<--- Sequence identity of the entire sequence region.
+		}
 		"fread": { <<--- Best results for each specific CDR
 			"H2": { <<---CDR identifier
 				"qu": "SGDEGY",  <<---query sequence
