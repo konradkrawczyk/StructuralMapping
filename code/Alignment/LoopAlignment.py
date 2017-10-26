@@ -34,13 +34,13 @@ def perform_loop_alignment(loop,template_pdb,template_chain,sequence):
 	results = run_fread(db,template,loop_starts[loop],sequence,template_chain,'')
 
 	#Find the highest score one.
-	best_match = None
+	best_match = {'str':None,'seq':None,'scr':None,'qu':sequence}
 	curr_max = -1
 	for decoy in results:
 		#Debugging...
 		#print decoy.struc, decoy.startres, decoy.startinscode, decoy.length, decoy.score,decoy.seq
 		if decoy.score> curr_max:
-			best_match = {'str':decoy.struc,'seq':decoy.seq,'scr':decoy.score}
+			best_match = {'str':decoy.struc,'seq':decoy.seq,'scr':decoy.score,'qu':sequence}
 			curr_max = decoy.score
 	return best_match
 

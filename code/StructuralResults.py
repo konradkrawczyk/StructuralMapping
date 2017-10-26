@@ -74,7 +74,7 @@ def merge_aggregates(current,new):
 def process_experiment(exp_name):
 	results_location = join(structural_map_location,exp_name)
 	i = 0
-	aggregate = {'cdr':{},'frame':{},'full':{}}
+	aggregate = {'cdr':{},'frame':{},'full':{},'fread':{}}
 
 	for f in sorted(listdir(results_location)):
 		i+=1
@@ -92,6 +92,7 @@ def process_experiment(exp_name):
 	f = open(join(aggregate_target,'aggregate.json'),'w')
 	f.write(json.dumps(aggregate))
 	f.close()
+
 if __name__ == '__main__':
 	
 	import sys

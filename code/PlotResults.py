@@ -10,6 +10,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib
 
+#Where to look for aggregate files.
+from Common.Common import aggregates_location
+
 ###############
 #FullSequence##
 ###############
@@ -65,6 +68,7 @@ def get_coverage(exp_name,region):
 	
 	for i in data[region]:
 		coverage[int(i)]+=data[region][i]
+
 	coverage_final = []
 	for i in range(start_range,101):
 		if i in coverage:
@@ -128,7 +132,8 @@ def plot_region():
 #CDRs##
 #######
 
-def bar_plot():
+#For input order is #CDR1, #CDR2 and #CDR3
+def bar_plot(can_model=(200, 350, 300),cant_model=(200, 300, 400),pdb=(20, 30, 40)):
 	import numpy as np
 	import matplotlib.pyplot as plt
 
@@ -137,10 +142,7 @@ def bar_plot():
 
 	#We always have three CDRs
 	N = 3
-	#CDR1, CDR2 and CDR3
-	can_model = (200, 350, 300)
-	cant_model = (200, 300, 400)
-	pdb = (20, 30, 40)
+	
 	
 	ind = np.arange(N)  # the x locations for the groups
 	width = 0.3       # the width of the bars
@@ -153,7 +155,6 @@ def bar_plot():
 	#PDB
 	rects3 = ax.bar(ind + width+width, pdb, width, color='b',alpha=the_alpha)
 
-
 	# add some text for labels, title and axes ticks
 	ax.set_ylabel('#Loops')
 	ax.set_xlabel('CDR')
@@ -162,7 +163,6 @@ def bar_plot():
 	ax.set_xticklabels(('H1', 'H2', 'H3'))
 	
 	ax.legend((rects1[0], rects2[0],rects3[0]), ('Can model', 'Cant model','In PDB'))
-
 
 	def autolabel(rects):
 	    """
@@ -180,8 +180,50 @@ def bar_plot():
 
 	plt.show()
 
+#Fetch the cdr data for a single experiment.
+#Counting in a non-redundant fashion.
+def fetch_nr_cdr_data(exp_name):
+	
+	data =json.load(open(join(aggregates_location,exp_name,'aggregate.json')))
+	plot_can_model = []
+	plot_cant_model = []
+	plot_in_pdb = []
+	for cdr in sorted(data['fread']):
+		print cdr
+		#Found in PDB
+		in_pdb = 0
+		#Can we model?
+		can_model = 0
+		#Can't we model?
+		cant_model = 0
+		#In the PDB
+		in_pdb = 0
+		#How many sequences in total?
+		total = 0
+		for sequence in data['fread'][cdr]:
+			total+=1
+			if data['fread'][cdr][sequence]['pdb'] == True:
+				in_pdb+=1
+				continue
+			if data['fread'][cdr][sequence]['model'] >0:
+				can_model+=1
+			else:
+				cant_model+=1
+			#print cdr,sequence,data['fread'][cdr][sequence]
+		plot_can_model.append((cdr,can_model))
+		plot_cant_model.append((cdr,cant_model))
+		plot_in_pdb.append((cdr,in_pdb))
+	
+	can_model = zip(*plot_can_model)[1]
+	cant_model = zip(*plot_cant_model)[1]
+	in_pdb = zip(*plot_in_pdb)[1]
+	return can_model,cant_model,in_pdb
+		
 if __name__ == '__main__':
 
-	bar_plot()
+	can_model,cant_model,in_pdb = fetch_nr_cdr_data('KELLY_MENINGO')
+	
+
+	bar_plot(can_model,cant_model,in_pdb)
 	
 	
