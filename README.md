@@ -44,7 +44,7 @@ Numbered results will be stored under data/numbered/[experiment name], so in thi
 
 **NB**: if you are re-running numbering do clear the data/numbered/[experiment name] directory beforehand, otherwise you will duplicate data.
 
-###A.2 Step 2 out of 2: Perform the structural mapping.
+### A.2 Step 2 out of 2: Perform the structural mapping.
 
 After all the sequences have been numbered, you structurally map the results by typing:
 
@@ -60,15 +60,15 @@ python StructuralAlignment.py structurallymap sample
 
 This will save the results in data/structuralmap/[experiment name].
 
-###A.3 Results
+### A.3 Results
 
-###B Parallelization of the protocol.
+### B Parallelization of the protocol.
 
 As you might've noticed, running this pipeline on a single thread on millions of sequences might not be optimal.
 
 For this reason for both steps 1 and 2, we have created utilities which create batch files for processing (multiple instances of the commands above which execute on different portions of the datasets).
 
-###B.1 Parallelize Chothia numbering.
+### B.1 Parallelize Chothia numbering.
 
 To get the parallelization script for step 1, Chothia numbering, the command is:
 
@@ -83,9 +83,35 @@ python DataProcessing.py parallel [exp_name] [fasta_location] number-of-cpus num
 You need to specify how many sequences there are in the fasta file, and how many parallel jobs you want to run at the same time. For instance, assuming that I have 6,666,666 sequences and want to run 78 parallel jobs on the sample experiment above, I'd type:
 
 ```
-python DataProcessing.py parallel sample ../data/raw/fasta/sample.fasta  78 6666666
+python DataProcessing.py parallel sample ../data/raw/fasta/sample.fasta  78 6666666 > number_sequences.sh
 ```
 
+Now simply run the number_sequences.sh script which will kick off the 78 processes:
+
+```
+./number_sequences.sh
+```
+
+**NB** You might have to make it executable 
+
+```
+chmod u+rx number_sequences.sh
+```
+
+### B.2 Parallelize Structural mapping .
+
+Logic is similar as with parallel Chothia numbering.
+
+```
+python StructuralAlignment.py parallel [experiment name] number-of-cpus
+```
+As above, you specify the number of CPUs and the name of the experiment. Continuing with our sample experiment this would be (to run on two CPus):
+
+```
+python StructuralAlignment.py parallel sample 2 > structurally_map.sh
+```
+
+**NB** If number of CPUs is greater than the number of chunks in the data/numbered/[exp name] folder, this will clearly fail. 
 
 
 
