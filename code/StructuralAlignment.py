@@ -98,19 +98,26 @@ if __name__ == '__main__':
 		ncpus = float(sys.argv[3])
 		#Figure out how many chunks there are to process.
 		nchunks = len(listdir(join(numbered_datasets_location,exp_name)))
-		dchunk = int(float(nchunks)/ncpus)
+		
+		dchunk = int(float(nchunks)/float(ncpus))
 		done_chunks = 0
+		
 		while done_chunks<nchunks:
 			print 'python StructuralAlignment.py structurallymap ',exp_name,' ',done_chunks,' ',done_chunks+dchunk,' &'
 			done_chunks+=dchunk
 
+	#Usage python StructuralAlignment.py structurallymap [experiment name]
 	if cmd == 'structurallymap':
 		
 		strucs = structural_reference()
 		
 		exp_name = sys.argv[2]
-		start = int(sys.argv[3])
-		end =int(sys.argv[4])
+		start = 0
+		end = 100000000000
+		#For parallelizing.
+		if len(sys.argv)>3:
+			start = int(sys.argv[3])
+			end =int(sys.argv[4])
 		results_directory = join(structural_map_location,exp_name)
 		#Check if directory to save results exists.
 		if not os.path.exists(results_directory):
