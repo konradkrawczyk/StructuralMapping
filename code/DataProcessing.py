@@ -107,19 +107,15 @@ if __name__ == '__main__':
 	if command == 'number_dataset':
 		experiment_name = sys.argv[2]
 		fasta_location = sys.argv[3]
-		start = sys.argv[4]
-		finish = sys.argv[5]
-		try:
-			parse_fasta_and_number(experiment_name,fasta_location,int(start),int(finish))
-		except Exception as exp:
-			raise
-			os.system('touch yeserror')
-			template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-			message = template.format(type(ex).__name__, ex.args)
-			f = open('toperror'+str(start)+'_'+str(finish),'w')
-			f.write(str(message))
-			f.close()
-			
+
+		#For parallelization.
+		start = 0
+		finish = 10000000000
+		if len(sys.argv) >5:
+			start = sys.argv[4]
+			finish = sys.argv[5]
+		parse_fasta_and_number(experiment_name,fasta_location,int(start),int(finish))
+
 	#Create scripts for parallel processing
 	#python DataProcessing.py parallel [exp_name] [fasta_location] number-of-cpus number-of-seqs
 	if command == 'parallel':
