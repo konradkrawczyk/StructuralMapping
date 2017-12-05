@@ -1,18 +1,23 @@
-from Common.Common import bulk_number
+from Common.Common import bulk_number,number_sequence
 from DataManagement.DataHandling import save_data
 import json,pprint
+from os.path import join
+from os import listdir
+import os
+import pickle
 #How many numbered sequences to hold in a single file.
 chunk_size = 100
 
 #Given raw sequences, number them and save.
-def number_and_save(data,experiment):
+def number_and_save(data,experiment,filename=""):
 	
 	numbered_results = bulk_number(data)
 	#Save the chunk
-	save_data(experiment,numbered_results)
+	save_data(experiment,numbered_results,filename=filename)
 
 #Update the antibody portion of the DB.
 def update_sabdab():
+
 	from DataManagement.SAbDab import fetch_sabdab_seqs
 	
 	antibodies = fetch_sabdab_seqs()
@@ -38,6 +43,7 @@ def update_sabdab():
 		if len(heavies) > chunk_size:
 			number_and_save(heavies,'sabdab')
 			heavies = {}
+
 	#See if we have some leftover sequences.
 	#Number lights.
 	if len(lights) > 0:
@@ -51,23 +57,39 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 	sequences = {}
 	curr_name = ""
 	prog = 0
+	
+	seqs_done = 0
+	
+	curr_prog = 0
+	#Find the latest if any.
+	if os.path.exists(join('../data/numbered/',experiment_name)):
+		for fname in listdir(join('../data/numbered/',experiment_name)):
+			fname = int(fname)
+			if fname<start or finish<fname:
+				continue
+			else:
+				if fname>start and finish>fname and fname>curr_prog:
+					curr_prog = fname
+	print "Starting from prog",curr_prog
 	for line in open(fasta_location):
-		prog+=1
-		if prog<start or prog>finish:
+		if '>' not in line:#Count progress only by the sequence line, to make sure we start with the next one.
+			prog+=1
+		if prog<start or prog>finish or prog<curr_prog:
 			continue
-		print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
+		#print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
 		line = line.strip()
 		if '>' in line:
 			curr_name = line.replace('>','')
 		else:
 			sequences[curr_name] = line
 		if len(sequences)> chunk_size:
-			number_and_save(sequences,experiment_name)
+			number_and_save(sequences,experiment_name,str(prog))
+
 			sequences = {}
 	
 	#See if we got any leftovers
 	if len(sequences)> 0:
-		number_and_save(sequences,experiment_name)
+		number_and_save(sequences,experiment_name,str(prog))
 	
 if __name__ == '__main__':
 
@@ -87,7 +109,17 @@ if __name__ == '__main__':
 		fasta_location = sys.argv[3]
 		start = sys.argv[4]
 		finish = sys.argv[5]
-		parse_fasta_and_number(experiment_name,fasta_location,int(start),int(finish))
+		try:
+			parse_fasta_and_number(experiment_name,fasta_location,int(start),int(finish))
+		except Exception as exp:
+			raise
+			os.system('touch yeserror')
+			template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+			message = template.format(type(ex).__name__, ex.args)
+			f = open('toperror'+str(start)+'_'+str(finish),'w')
+			f.write(str(message))
+			f.close()
+			
 	#Create scripts for parallel processing
 	#python DataProcessing.py parallel [exp_name] [fasta_location] number-of-cpus number-of-seqs
 	if command == 'parallel':
@@ -103,6 +135,24 @@ if __name__ == '__main__':
 			
 			print 'python DataProcessing.py number_dataset ',experiment_name,' ',fasta_location,' ',done,done+dseqs,' &'
 			done+=dseqs
-		 
+	if command == 'debug_chunk':
+		import pickle
+		data = pickle.load(open('../data/numbered/UCB_H/479805164552502168'))
+		for d in data:
+			print data[d]
+		print len(data)
+	if command == 'count_numbered':#Debugging purposes.
+		exp_name = 'UCB_H' 
+		results_location = join('../data/numbered',exp_name)
+		count = 0
+		for f in sorted(listdir(results_location)):
+			print f
+			d = pickle.load(open(join('../data/numbered/',exp_name,f)))
+			for elem in d:
+				count+=1
+			print "Curr count",count
+		print "Final count",count
+
+	#
 		 
 	#DEUBGGING

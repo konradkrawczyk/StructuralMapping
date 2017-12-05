@@ -5,7 +5,7 @@ from os.path import join
 from Alignment.Align import align_sequences
 #Aligning CDRs.
 from Alignment.LoopAlignment import perform_loop_alignment,extract_cdrs
-from Common.Common import get_sequence,numbered_datasets_location,structural_map_location
+from Common.Common import get_sequence,numbered_datasets_location,structural_map_location,number_sequence
 from DataManagement.SAbDab import structural_reference
 import json
 
@@ -32,17 +32,35 @@ def get_best_match(query,structures,region=None):
 
 #Given anchors, employ FREAD to get the best CDR-templates.
 def get_best_cdr_match(query,fread_template):
-	pickle.dump(query,open('sample_sequence.pckl','w'))
+	#pickle.dump(query,open('sample_sequence.pckl','w'))
 	cdrs = extract_cdrs(query[0])
 	pdb_template = fread_template[0:4]
 	pdb_chain = fread_template[4]
+
 	cdr_results = {}
 	for cdr in cdrs:
 		cdr_results[cdr] = perform_loop_alignment(cdr,pdb_template,pdb_chain,cdrs[cdr])
 	return cdr_results
 	
-		
-#Go through all the chunks in the 
+#given a numbered anarci sequence and reference structures, get the best structural hits.
+def align_single_sequence(query, structures):
+	#Get best full-sequence match.
+	full_results = get_best_match(query,structures)
+	#Get best framework match. False region stands for 'not CDR' ergo framework
+	frame_results = get_best_match(query,structures,region=[False])
+	#Get best CDR match -- full region.
+	cdr_results = get_best_match(query,structures,region=['H1','H2','H3','L1','L2','L3'])
+	#Get the nuanced-fread based hits for each CDR in turn.
+	fread_results = None
+			
+	if 'best_pdb' in full_results:
+		try:
+			fread_results = get_best_cdr_match(query,full_results['best_pdb'])
+		except:
+			pass
+	return full_results,frame_results,cdr_results,fread_results
+
+#Go through all the chunks in the experiment and perform structural mapping.
 def perform_comparison(sample_name,structures,start,end):
 	source = join(numbered_datasets_location,sample_name)
 	i = 0
@@ -59,21 +77,8 @@ def perform_comparison(sample_name,structures,start,end):
 			query_name = query
 			query = d[query]
 			
-			#Get best full-sequence match.
-			full_results = get_best_match(query,structures)
-			#Get best framework match. False region stands for 'not CDR' ergo framework
-			frame_results = get_best_match(query,structures,region=[False])
-			#Get best CDR match -- full region.
-			cdr_results = get_best_match(query,structures,region=['H1','H2','H3','L1','L2','L3'])
-			#Get the nuanced-fread based hits for each CDR in turn.
-			fread_results = None
-			if 'best_pdb' in full_results:
-				try:
-					fread_results = get_best_cdr_match(query,full_results['best_pdb'])
-				except:
-					pass
-			print fread_results
-			
+			full_results,frame_results,cdr_results,fread_results = align_single_sequence(query, structures)
+
 			#print get_sequence(query[0])
 			#print 'FULL',full_results
 			#print 'Frame',frame_results
@@ -119,6 +124,10 @@ if __name__ == '__main__':
 	
 		perform_comparison(exp_name,strucs,start,end)
 	
+	if cmd == 'count_structures':#Count how many structures in the currrent release.
+		strucs = structural_reference()
+		print "We have ",len(strucs)
+
 	if cmd == 'debug':
 		strucs = structural_reference()
 		
@@ -132,10 +141,21 @@ if __name__ == '__main__':
 		print "Got",len(strucs),'structures to compare against.'
 	
 		perform_comparison(exp_name,strucs,start,end)
-
-	#Load structural reference.
-
-	#For each sequence in the set to be numbered, compare.
+	
+	#Processing a single sequence
+	if cmd == 'process_single':
 		
-	#dump results.
+		sequence = sys.argv[2]
+		#Number the sequence
+		#Format of the query: (numbered_sequence,chain)
+		query = number_sequence(sequence)
+		
+		#Load the structural reference.
+
+		strucs = structural_reference()
+
+		print align_single_sequence(query, strucs)
+
+		
+
 	

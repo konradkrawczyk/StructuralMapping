@@ -26,17 +26,32 @@ def process_single_map(loc):
 					for cdr in data[sequence][region]:
 						fread_data = data[sequence][region][cdr]
 						
+						#The actual sequence as submitted in the NGS dataset.
 						cdr_sequence = fread_data['qu']
+						
 						if cdr not in results['fread']:
 							results['fread'][cdr] = {}
 						if cdr_sequence not in results['fread'][cdr]:
 							results['fread'][cdr][cdr_sequence] = {'total':0,'pdb':False,'model':0}
+						
 						results['fread'][cdr][cdr_sequence]['total']+=1
 						if fread_data['str'] !=None:
 							results['fread'][cdr][cdr_sequence]['model']+=1
 							#If the structure we found is identical to the query, say we have a pdb hit.
 							if fread_data['qu'] == fread_data['seq']:
 								results['fread'][cdr][cdr_sequence]['pdb'] = True
+						
+						if 'score' not in results['fread'][cdr][cdr_sequence]:
+							results['fread'][cdr][cdr_sequence]['score'] = 0
+
+						#The ESS score.
+						try:
+							score = int(fread_data['scr'])
+						except TypeError:#Means there is no score as we did not find a suitable match.
+							continue
+						#Deal with ESS score. Keep the highest ESS score for the given CDR sequence.
+						if results['fread'][cdr][cdr_sequence]['score'] < score:
+							results['fread'][cdr][cdr_sequence]['score'] = score
 						
 				
 			else:
@@ -59,9 +74,13 @@ def merge_aggregates(current,new):
 						current[region][cdr][sequence] = {'total':0,'pdb':False,'model':0}
 					current[region][cdr][sequence]['total']+=new[region][cdr][sequence]['total']
 					current[region][cdr][sequence]['model']+=new[region][cdr][sequence]['model']
+					
 					if new[region][cdr][sequence]['pdb'] == True:
 						current[region][cdr][sequence]['pdb'] = True
-					
+					if 'score' not in current[region][cdr][sequence]:
+						current[region][cdr][sequence]['score'] = 0
+					if new[region][cdr][sequence]['score'] > current[region][cdr][sequence]['score']:
+						current[region][cdr][sequence]['score'] = new[region][cdr][sequence]['score']
 		else:
 
 			for sid in new[region]:
@@ -78,7 +97,7 @@ def process_experiment(exp_name):
 
 	for f in sorted(listdir(results_location)):
 		i+=1
-		print i
+		print 'Done',i,'files...'
 		
 		results = process_single_map(join(results_location,f))
 		
@@ -103,6 +122,10 @@ if __name__ == '__main__':
 		#Create aggregate given experiment name
 		process_experiment(sys.argv[2])
 	
+	###########
+	#DEBUGGING#
+	###########
+
 	if cmd == 'debug_single':#Debugging processing single maps
 		exp_name = 'sample'
 		results_location = join(structural_map_location,exp_name)

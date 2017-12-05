@@ -1,4 +1,5 @@
 from FREAD.pyfread_api import run_fread
+from Common.Common import is_CDR
 
 #For fread, one residue BEFORE the start of the loop.
 loop_starts = {'L1':23,'L2':49,'L3':88,'H1':25,'H2':51,'H3':94}
@@ -8,7 +9,9 @@ def extract_cdrs(numbered):
 	cdrs = {}
 	for chid in sorted(numbered):
 		
-		cdr_code = numbered[chid][1]#H1, L3 if CDR, False if freamework
+		chothia = chid[2]+str(chid[0])
+		cdr_code = is_CDR(chothia)#H1, L3 if CDR, False if freamework
+		
 		if cdr_code != False:
 			#means we are a CDR
 			aa = numbered[chid][0]
@@ -55,6 +58,6 @@ if __name__ == '__main__':
 		print perform_loop_alignment(loop,'12e8','P',sequence)
 	if cmd == 'fetch_cdrs':
 		import pickle
-		query = pickle.load(open('../sample_sequence.pckl'))
+		query = pickle.load(open('sample_sequence.pckl'))
 		print extract_cdrs(query[0])
 	
