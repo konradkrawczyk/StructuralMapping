@@ -79,6 +79,12 @@ def perform_comparison(sample_name,structures,start,end):
 			
 			full_results,frame_results,cdr_results,fread_results = align_single_sequence(query, structures)
 
+			#For fread, we only want the top prediction to assess if there is anything there.
+			try:
+				fread_results = fread_results[0]
+			except:
+				fread_results = None
+
 			#print get_sequence(query[0])
 			#print 'FULL',full_results
 			#print 'Frame',frame_results

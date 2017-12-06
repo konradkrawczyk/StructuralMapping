@@ -25,27 +25,27 @@ def extract_cdrs(numbered):
 #template_pdb -- e.g. 12e8
 #templaet_chain -- e.g. P
 #sequence -- e.g. 'DPEIGD'
+#return_top -- how many top results to fetch?
 #Result: json-formatted best match {'seq': u'DPEIGD', 'str': u'12e8P', 'scr': 45} or None
-def perform_loop_alignment(loop,template_pdb,template_chain,sequence):
+def perform_loop_alignment(loop,template_pdb,template_chain,sequence,return_top=10):
 	
 	#database location
 	db = '../data/fread_db/db_CDR'+loop
 
 	#Template location.
 	template = '../data/structures/'+template_pdb+template_chain+'_no_cdrs.pdb'
-	print template
 	results = run_fread(db,template,loop_starts[loop],sequence,template_chain,'')
 
-	#Find the highest score one.
-	best_match = {'str':None,'seq':None,'scr':None,'qu':sequence}
-	curr_max = -1
+	
+	#Get the best matches.
+	matches = []
+	
 	for decoy in results:
 		#Debugging...
 		#print decoy.struc, decoy.startres, decoy.startinscode, decoy.length, decoy.score,decoy.seq
-		if decoy.score> curr_max:
-			best_match = {'str':decoy.struc,'seq':decoy.seq,'scr':decoy.score,'qu':sequence}
-			curr_max = decoy.score
-	return best_match
+		matches.append((decoy.score,{'str':decoy.struc,'seq':decoy.seq,'scr':decoy.score,'qu':sequence}))
+		
+	return sorted(matches,reverse=True)[0:min(return_top,len(matches))]
 
 #Strictly for debugging constituent funcionality.
 if __name__ == '__main__':

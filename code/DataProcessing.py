@@ -104,7 +104,7 @@ if __name__ == '__main__':
 	#Create a numbered dataset from fasta file.
 	#Usage: python DataProcessing.py number_dataset [experiment_name] [fasta location]
 		#Saves pickled numbered files into [datadirectory]/numbered/[experiment_name]/
-	if command == 'number_dataset':
+	if command == 'process_dataset':
 		experiment_name = sys.argv[2]
 		fasta_location = sys.argv[3]
 
@@ -129,25 +129,9 @@ if __name__ == '__main__':
 		done = 0
 		while done< nseqs:
 			
-			print 'python DataProcessing.py number_dataset ',experiment_name,' ',fasta_location,' ',done,done+dseqs,' &'
+			print 'python DataProcessing.py process_dataset ',experiment_name,' ',fasta_location,' ',done,done+dseqs,' &'
 			done+=dseqs
-	if command == 'debug_chunk':
-		import pickle
-		data = pickle.load(open('../data/numbered/UCB_H/479805164552502168'))
-		for d in data:
-			print data[d]
-		print len(data)
-	if command == 'count_numbered':#Debugging purposes.
-		exp_name = 'UCB_H' 
-		results_location = join('../data/numbered',exp_name)
-		count = 0
-		for f in sorted(listdir(results_location)):
-			print f
-			d = pickle.load(open(join('../data/numbered/',exp_name,f)))
-			for elem in d:
-				count+=1
-			print "Curr count",count
-		print "Final count",count
+	
 
 	#
 		 
