@@ -1,5 +1,7 @@
-from Common.Common import bulk_number,number_sequence
+from Common.Common import bulk_number,number_sequence,structural_map_location
 from DataManagement.DataHandling import save_data
+from StructuralAlignment import  align_single_sequence
+from DataManagement.SAbDab import structural_reference
 import json,pprint
 from os.path import join
 from os import listdir
@@ -9,11 +11,38 @@ import pickle
 chunk_size = 100
 
 #Given raw sequences, number them and save.
-def number_and_save(data,experiment,filename=""):
+def number_and_save(data,experiment,chunk="random_chunk_name"):
+
+	chunk_results = {}
+
+	for sequence_name in data:
+		
+		sequence = data[sequence_name]
+		query = number_sequence(sequence)
+		full_results,frame_results,cdr_results,_fread_results = align_single_sequence(query, strucs)
+		fread_results = {}
+		#For fread, we only want the top prediction to assess if there is anything there.
+		try:
+			for cdr in _fread_results:
+				fread_results[cdr] = _fread_results[cdr][0][1]
+			
+		except:
+			fread_results = None
+
+		alignment_results = {'full':full_results,'frame':frame_results,'cdr':cdr_results,'fread':fread_results}
+		chunk_results[sequence_name] = alignment_results
 	
-	numbered_results = bulk_number(data)
+	
+	print "Dumping structural map results for chunk",chunk
+	#Json-format the results so they can be easily interpreted by different pieces of software.
+	js = json.dumps(chunk_results)
+	f = open(join(structural_map_location,experiment,chunk+'.json'),'w')
+	f.write(js)
+	f.close()
+
+	#numbered_results = bulk_number(data)
 	#Save the chunk
-	save_data(experiment,numbered_results,filename=filename)
+	#save_data(experiment,numbered_results,filename=filename)
 
 #Update the antibody portion of the DB.
 def update_sabdab():
@@ -56,40 +85,48 @@ def update_sabdab():
 def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 	sequences = {}
 	curr_name = ""
+	
+	#How far did we get through the file.
 	prog = 0
 	
-	seqs_done = 0
-	
+	#used for checkpointing,seeing when the calcaultion stopped.
 	curr_prog = 0
 	#Find the latest if any.
-	if os.path.exists(join('../data/numbered/',experiment_name)):
-		for fname in listdir(join('../data/numbered/',experiment_name)):
-			fname = int(fname)
+	if os.path.exists(join(structural_map_location,experiment_name)):
+		
+		for fname in listdir(join(structural_map_location,experiment_name)):
+			fname = int(fname.replace('.json',''))
+			print fname,start,finish
 			if fname<start or finish<fname:
 				continue
 			else:
-				if fname>start and finish>fname and fname>curr_prog:
+				if fname>start and finish>=fname and fname>curr_prog:
 					curr_prog = fname
-	print "Starting from prog",curr_prog
+	
 	for line in open(fasta_location):
-		if '>' not in line:#Count progress only by the sequence line, to make sure we start with the next one.
+		if 'QVQLVQSGPGLVKPSQTLSLTCAISGDIVSSNNAAWNWIRQSPSRGLEWLGRTYYRSKWYNDYAVSVKSRITINPDTSKNQFSLQLNSVTPEDTAVYYCVRDNLSTGHREFDYWGQGPLVTVSS' in line:
+			print prog
+		if '>' in line:#Count progress only by the sequence line, to make sure we start with the next one.
 			prog+=1
-		if prog<start or prog>finish or prog<curr_prog:
+		if prog<start or prog<curr_prog:
 			continue
+		if prog>=finish:
+			break
 		#print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
 		line = line.strip()
 		if '>' in line:
 			curr_name = line.replace('>','')
 		else:
+			
 			sequences[curr_name] = line
 		if len(sequences)> chunk_size:
-			number_and_save(sequences,experiment_name,str(prog))
+			number_and_save(sequences,experiment_name,str(min(prog,finish)))
 
 			sequences = {}
 	
 	#See if we got any leftovers
 	if len(sequences)> 0:
-		number_and_save(sequences,experiment_name,str(prog))
+		number_and_save(sequences,experiment_name,str(min(prog,finish)))
 	
 if __name__ == '__main__':
 
@@ -105,7 +142,8 @@ if __name__ == '__main__':
 	#Usage: python DataProcessing.py number_dataset [experiment_name] [fasta location]
 		#Saves pickled numbered files into [datadirectory]/numbered/[experiment_name]/
 	if command == 'process_dataset':
-		experiment_name = sys.argv[2]
+
+		exp_name = sys.argv[2]
 		fasta_location = sys.argv[3]
 
 		#For parallelization.
@@ -114,7 +152,17 @@ if __name__ == '__main__':
 		if len(sys.argv) >5:
 			start = sys.argv[4]
 			finish = sys.argv[5]
-		parse_fasta_and_number(experiment_name,fasta_location,int(start),int(finish))
+		
+		#Load the structural reference.
+		strucs = structural_reference()
+
+
+		results_directory = join(structural_map_location,exp_name)
+		#Check if directory to save results exists.
+		if not os.path.exists(results_directory):
+			os.mkdir(results_directory)
+
+		parse_fasta_and_number(exp_name,fasta_location,int(start),int(finish))
 
 	#Create scripts for parallel processing
 	#python DataProcessing.py parallel [exp_name] [fasta_location] number-of-cpus number-of-seqs

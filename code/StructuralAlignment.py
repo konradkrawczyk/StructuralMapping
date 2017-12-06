@@ -60,100 +60,18 @@ def align_single_sequence(query, structures):
 			pass
 	return full_results,frame_results,cdr_results,fread_results
 
-#Go through all the chunks in the experiment and perform structural mapping.
-def perform_comparison(sample_name,structures,start,end):
-	source = join(numbered_datasets_location,sample_name)
-	i = 0
-	for chunk in sorted(listdir(source)):
-		
-		#for parallelization
-		i+=1
-		if i<start or i>end:
-			continue  
-		d = pickle.load(open(join(source,chunk)))
-		print "Number of seqs in chunk",len(d)
-		chunk_results = {}
-		for query in d:
-			query_name = query
-			query = d[query]
-			
-			full_results,frame_results,cdr_results,fread_results = align_single_sequence(query, structures)
 
-			#For fread, we only want the top prediction to assess if there is anything there.
-			try:
-				fread_results = fread_results[0]
-			except:
-				fread_results = None
-
-			#print get_sequence(query[0])
-			#print 'FULL',full_results
-			#print 'Frame',frame_results
-			#print 'CDR',cdr_results
-			alignment_results = {'full':full_results,'frame':frame_results,'cdr':cdr_results,'fread':fread_results}
-			chunk_results[query_name] = alignment_results
-		print "Dumping structural map results for chunk",chunk
-		#Json-format the results so they can be easily interpreted by different pieces of software.
-		js = json.dumps(chunk_results)
-		f = open(join(structural_map_location,sample_name,chunk+'.json'),'w')
-		f.write(js)
-		f.close()
 
 if __name__ == '__main__':
 	
 	import sys
 	cmd = sys.argv[1]
 
-	#Usage: python StructuralAlignment.py parallel [experiment name] number-of-cpus
-	if cmd == 'parallel':
-		exp_name = sys.argv[2]
-		ncpus = float(sys.argv[3])
-		#Figure out how many chunks there are to process.
-		nchunks = len(listdir(join(numbered_datasets_location,exp_name)))
-		
-		dchunk = int(float(nchunks)/float(ncpus))
-		done_chunks = 0
-		
-		while done_chunks<nchunks:
-			print 'python StructuralAlignment.py structurallymap ',exp_name,' ',done_chunks,' ',done_chunks+dchunk,' &'
-			done_chunks+=dchunk
-
-	#Usage python StructuralAlignment.py structurallymap [experiment name]
-	if cmd == 'structurallymap':
-		
-		strucs = structural_reference()
-		
-		exp_name = sys.argv[2]
-		start = 0
-		end = 100000000000
-		#For parallelizing.
-		if len(sys.argv)>3:
-			start = int(sys.argv[3])
-			end =int(sys.argv[4])
-		results_directory = join(structural_map_location,exp_name)
-		#Check if directory to save results exists.
-		if not os.path.exists(results_directory):
-			os.mkdir(results_directory)
-		print "Got",len(strucs),'structures to compare against.'
-	
-		perform_comparison(exp_name,strucs,start,end)
 	
 	if cmd == 'count_structures':#Count how many structures in the currrent release.
 		strucs = structural_reference()
 		print "We have ",len(strucs)
 
-	if cmd == 'debug':
-		strucs = structural_reference()
-		
-		exp_name = 'sample'
-		start = 1
-		end =2
-		results_directory = join(structural_map_location,exp_name)
-		#Check if directory to save results exists.
-		if not os.path.exists(results_directory):
-			os.mkdir(results_directory)
-		print "Got",len(strucs),'structures to compare against.'
-	
-		perform_comparison(exp_name,strucs,start,end)
 	
 	#Processing a single sequence
 	if cmd == 'process_single':
