@@ -1,6 +1,12 @@
 from FREAD.pyfread_api import run_fread
 from Common.Common import is_CDR
 
+#Maintain a cache for fread results (for parallel runs)
+#(cdr,template,sequence) -> results
+#(H1,12e8P,GWITITIT)
+fread_cache = {}
+
+
 #For fread, one residue BEFORE the start of the loop.
 loop_starts = {'L1':23,'L2':49,'L3':88,'H1':25,'H2':51,'H3':94}
 
@@ -29,6 +35,12 @@ def extract_cdrs(numbered):
 #Result: json-formatted best match {'seq': u'DPEIGD', 'str': u'12e8P', 'scr': 45} or None
 def perform_loop_alignment(loop,template_pdb,template_chain,sequence,return_top=10):
 	
+
+	cache_key = (loop,template_pdb+template_chain,sequence)
+
+	if cache_key in fread_cache:
+		return fread_cache[cache_key]
+
 	#database location
 	db = '../data/fread_db/db_CDR'+loop
 
@@ -44,8 +56,13 @@ def perform_loop_alignment(loop,template_pdb,template_chain,sequence,return_top=
 		#Debugging...
 		#print decoy.struc, decoy.startres, decoy.startinscode, decoy.length, decoy.score,decoy.seq
 		matches.append((decoy.score,{'str':decoy.struc,'seq':decoy.seq,'scr':decoy.score,'qu':sequence}))
-		
-	return sorted(matches,reverse=True)[0:min(return_top,len(matches))]
+	
+	fread_results = sorted(matches,reverse=True)[0:min(return_top,len(matches))]
+
+	#Cache the resulst
+	fread_cache[cache_key] = fread_results
+
+	return fread_results
 
 #Strictly for debugging constituent funcionality.
 if __name__ == '__main__':
