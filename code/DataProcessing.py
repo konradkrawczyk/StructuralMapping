@@ -7,6 +7,7 @@ from os.path import join
 from os import listdir
 import os
 import pickle
+import math
 #How many numbered sequences to hold in a single file.
 chunk_size = 100
 
@@ -110,7 +111,7 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 			prog+=1
 		if prog<start or prog<curr_prog:
 			continue
-		if prog>=finish:
+		if prog>finish:
 			break
 		#print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
 		line = line.strip()
@@ -156,7 +157,6 @@ if __name__ == '__main__':
 		#Load the structural reference.
 		strucs = structural_reference()
 
-
 		results_directory = join(structural_map_location,exp_name)
 		#Check if directory to save results exists.
 		if not os.path.exists(results_directory):
@@ -172,12 +172,12 @@ if __name__ == '__main__':
 		
 		ncpus = float(sys.argv[4])
 		nseqs = float(sys.argv[5])
-		dseqs = int(float(nseqs)/float(ncpus))
-		
+		dseqs = int(math.ceil(float(nseqs)/float(ncpus)))
+		print dseqs
 		done = 0
 		while done< nseqs:
 			
-			print 'python DataProcessing.py process_dataset ',experiment_name,' ',fasta_location,' ',done,done+dseqs,' &'
+			print 'python DataProcessing.py process_dataset ',experiment_name,' ',fasta_location,' ',done+1,done+dseqs,' &'
 			done+=dseqs
 	
 
