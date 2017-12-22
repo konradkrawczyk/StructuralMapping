@@ -103,7 +103,8 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 			else:
 				if fname>start and finish>=fname and fname>curr_prog:
 					curr_prog = fname
-	
+	#Current sequence being read.	
+
 	for line in open(fasta_location):
 		if 'QVQLVQSGPGLVKPSQTLSLTCAISGDIVSSNNAAWNWIRQSPSRGLEWLGRTYYRSKWYNDYAVSVKSRITINPDTSKNQFSLQLNSVTPEDTAVYYCVRDNLSTGHREFDYWGQGPLVTVSS' in line:
 			print prog
@@ -117,9 +118,10 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 		line = line.strip()
 		if '>' in line:
 			curr_name = line.replace('>','')
+			sequences[curr_name] = ""
 		else:
 			
-			sequences[curr_name] = line
+			sequences[curr_name] += line.strip()
 		if len(sequences)> chunk_size:
 			number_and_save(sequences,experiment_name,str(min(prog,finish)))
 
@@ -140,8 +142,9 @@ if __name__ == '__main__':
 	if command == 'update_sabdab':
 		update_sabdab()
 	#Create a numbered dataset from fasta file.
-	#Usage: python DataProcessing.py number_dataset [experiment_name] [fasta location]
-		#Saves pickled numbered files into [datadirectory]/numbered/[experiment_name]/
+	#Usage: python DataProcessing.py process_dataset [experiment_name] [fasta location] start finish
+	#Saves files into [datadirectory]/structuralmap/[experiment_name]/
+	#if start and finish are specified, it will try to process only sequence within [start,finish] in the fasta file (both inclusive)
 	if command == 'process_dataset':
 
 		exp_name = sys.argv[2]
