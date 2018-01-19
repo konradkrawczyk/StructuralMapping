@@ -1,4 +1,11 @@
 from FREAD.pyfread_api import run_fread
+from Common.Common import is_CDR
+
+#Maintain a cache for fread results (for parallel runs)
+#(cdr,template,sequence) -> results
+#(H1,12e8P,GWITITIT)
+fread_cache = {}
+
 
 #For fread, one residue BEFORE the start of the loop.
 loop_starts = {'L1':23,'L2':49,'L3':88,'H1':25,'H2':51,'H3':94}
@@ -8,7 +15,9 @@ def extract_cdrs(numbered):
 	cdrs = {}
 	for chid in sorted(numbered):
 		
-		cdr_code = numbered[chid][1]#H1, L3 if CDR, False if freamework
+		chothia = chid[2]+str(chid[0])
+		cdr_code = is_CDR(chothia)#H1, L3 if CDR, False if freamework
+		
 		if cdr_code != False:
 			#means we are a CDR
 			aa = numbered[chid][0]
@@ -22,27 +31,38 @@ def extract_cdrs(numbered):
 #template_pdb -- e.g. 12e8
 #templaet_chain -- e.g. P
 #sequence -- e.g. 'DPEIGD'
+#return_top -- how many top results to fetch?
 #Result: json-formatted best match {'seq': u'DPEIGD', 'str': u'12e8P', 'scr': 45} or None
-def perform_loop_alignment(loop,template_pdb,template_chain,sequence):
+def perform_loop_alignment(loop,template_pdb,template_chain,sequence,return_top=10):
 	
+
+	cache_key = (loop,template_pdb+template_chain,sequence)
+
+	if cache_key in fread_cache:
+		return fread_cache[cache_key]
+
 	#database location
 	db = '../data/fread_db/db_CDR'+loop
 
 	#Template location.
 	template = '../data/structures/'+template_pdb+template_chain+'_no_cdrs.pdb'
-	print template
 	results = run_fread(db,template,loop_starts[loop],sequence,template_chain,'')
 
-	#Find the highest score one.
-	best_match = {'str':None,'seq':None,'scr':None,'qu':sequence}
-	curr_max = -1
+	
+	#Get the best matches.
+	matches = []
+	
 	for decoy in results:
 		#Debugging...
 		#print decoy.struc, decoy.startres, decoy.startinscode, decoy.length, decoy.score,decoy.seq
-		if decoy.score> curr_max:
-			best_match = {'str':decoy.struc,'seq':decoy.seq,'scr':decoy.score,'qu':sequence}
-			curr_max = decoy.score
-	return best_match
+		matches.append((decoy.score,{'str':decoy.struc,'seq':decoy.seq,'scr':decoy.score,'qu':sequence}))
+	
+	fread_results = sorted(matches,reverse=True)[0:min(return_top,len(matches))]
+
+	#Cache the resulst
+	fread_cache[cache_key] = fread_results
+
+	return fread_results
 
 #Strictly for debugging constituent funcionality.
 if __name__ == '__main__':
@@ -55,6 +75,6 @@ if __name__ == '__main__':
 		print perform_loop_alignment(loop,'12e8','P',sequence)
 	if cmd == 'fetch_cdrs':
 		import pickle
-		query = pickle.load(open('../sample_sequence.pckl'))
+		query = pickle.load(open('sample_sequence.pckl'))
 		print extract_cdrs(query[0])
 	

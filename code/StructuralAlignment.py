@@ -5,7 +5,7 @@ from os.path import join
 from Alignment.Align import align_sequences
 #Aligning CDRs.
 from Alignment.LoopAlignment import perform_loop_alignment,extract_cdrs
-from Common.Common import get_sequence,numbered_datasets_location,structural_map_location
+from Common.Common import get_sequence,numbered_datasets_location,structural_map_location,number_sequence
 from DataManagement.SAbDab import structural_reference
 import json
 
@@ -32,117 +32,61 @@ def get_best_match(query,structures,region=None):
 
 #Given anchors, employ FREAD to get the best CDR-templates.
 def get_best_cdr_match(query,fread_template):
-	pickle.dump(query,open('sample_sequence.pckl','w'))
+	#pickle.dump(query,open('sample_sequence.pckl','w'))
 	cdrs = extract_cdrs(query[0])
 	pdb_template = fread_template[0:4]
 	pdb_chain = fread_template[4]
+
 	cdr_results = {}
 	for cdr in cdrs:
 		cdr_results[cdr] = perform_loop_alignment(cdr,pdb_template,pdb_chain,cdrs[cdr])
 	return cdr_results
 	
-		
-#Go through all the chunks in the 
-def perform_comparison(sample_name,structures,start,end):
-	source = join(numbered_datasets_location,sample_name)
-	i = 0
-	for chunk in sorted(listdir(source)):
-		
-		#for parallelization
-		i+=1
-		if i<start or i>end:
-			continue  
-		d = pickle.load(open(join(source,chunk)))
-		print "Number of seqs in chunk",len(d)
-		chunk_results = {}
-		for query in d:
-			query_name = query
-			query = d[query]
+#given a numbered anarci sequence and reference structures, get the best structural hits.
+def align_single_sequence(query, structures):
+	#Get best full-sequence match.
+	full_results = get_best_match(query,structures)
+	#Get best framework match. False region stands for 'not CDR' ergo framework
+	frame_results = get_best_match(query,structures,region=[False])
+	#Get best CDR match -- full region.
+	cdr_results = get_best_match(query,structures,region=['H1','H2','H3','L1','L2','L3'])
+	#Get the nuanced-fread based hits for each CDR in turn.
+	fread_results = None
 			
-			#Get best full-sequence match.
-			full_results = get_best_match(query,structures)
-			#Get best framework match. False region stands for 'not CDR' ergo framework
-			frame_results = get_best_match(query,structures,region=[False])
-			#Get best CDR match -- full region.
-			cdr_results = get_best_match(query,structures,region=['H1','H2','H3','L1','L2','L3'])
-			#Get the nuanced-fread based hits for each CDR in turn.
-			fread_results = None
-			if 'best_pdb' in full_results:
-				try:
-					fread_results = get_best_cdr_match(query,full_results['best_pdb'])
-				except:
-					pass
-			print fread_results
-			
-			#print get_sequence(query[0])
-			#print 'FULL',full_results
-			#print 'Frame',frame_results
-			#print 'CDR',cdr_results
-			alignment_results = {'full':full_results,'frame':frame_results,'cdr':cdr_results,'fread':fread_results}
-			chunk_results[query_name] = alignment_results
-		print "Dumping structural map results for chunk",chunk
-		#Json-format the results so they can be easily interpreted by different pieces of software.
-		js = json.dumps(chunk_results)
-		f = open(join(structural_map_location,sample_name,chunk+'.json'),'w')
-		f.write(js)
-		f.close()
+	if 'best_pdb' in full_results:
+		try:
+			fread_results = get_best_cdr_match(query,full_results['best_pdb'])
+		except:
+			pass
+	return full_results,frame_results,cdr_results,fread_results
+
+
 
 if __name__ == '__main__':
 	
 	import sys
 	cmd = sys.argv[1]
 
-	#Usage: python StructuralAlignment.py parallel [experiment name] number-of-cpus
-	if cmd == 'parallel':
-		exp_name = sys.argv[2]
-		ncpus = float(sys.argv[3])
-		#Figure out how many chunks there are to process.
-		nchunks = len(listdir(join(numbered_datasets_location,exp_name)))
-		
-		dchunk = int(float(nchunks)/float(ncpus))
-		done_chunks = 0
-		
-		while done_chunks<nchunks:
-			print 'python StructuralAlignment.py structurallymap ',exp_name,' ',done_chunks,' ',done_chunks+dchunk,' &'
-			done_chunks+=dchunk
-
-	#Usage python StructuralAlignment.py structurallymap [experiment name]
-	if cmd == 'structurallymap':
-		
+	
+	if cmd == 'count_structures':#Count how many structures in the currrent release.
 		strucs = structural_reference()
+		print "We have ",len(strucs)
+
+	
+	#Processing a single sequence
+	if cmd == 'process_single':
 		
-		exp_name = sys.argv[2]
-		start = 0
-		end = 100000000000
-		#For parallelizing.
-		if len(sys.argv)>3:
-			start = int(sys.argv[3])
-			end =int(sys.argv[4])
-		results_directory = join(structural_map_location,exp_name)
-		#Check if directory to save results exists.
-		if not os.path.exists(results_directory):
-			os.mkdir(results_directory)
-		print "Got",len(strucs),'structures to compare against.'
-	
-		perform_comparison(exp_name,strucs,start,end)
-	
-	if cmd == 'debug':
+		sequence = sys.argv[2]
+		#Number the sequence
+		#Format of the query: (numbered_sequence,chain)
+		query = number_sequence(sequence)
+		
+		#Load the structural reference.
+
 		strucs = structural_reference()
-		
-		exp_name = 'sample'
-		start = 1
-		end =2
-		results_directory = join(structural_map_location,exp_name)
-		#Check if directory to save results exists.
-		if not os.path.exists(results_directory):
-			os.mkdir(results_directory)
-		print "Got",len(strucs),'structures to compare against.'
-	
-		perform_comparison(exp_name,strucs,start,end)
 
-	#Load structural reference.
+		print align_single_sequence(query, strucs)
 
-	#For each sequence in the set to be numbered, compare.
 		
-	#dump results.
+
 	

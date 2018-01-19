@@ -10,7 +10,6 @@ def random_filename():
 	return filename
 	
 
-
 #################
 #Common locations
 #################
@@ -43,12 +42,15 @@ definitions = {
 #Is this a CDR? If so tell which.
 #e.g. res is "L52", do not supply insertion.
 def is_CDR(res,deff='chothia'):
+
+	if 'K' in res:
+		res = res.replace('K','L')
+
 	for CDR in definitions[deff]:
 		if res in definitions[deff][CDR]:
 			return CDR
 
 	return False
-
 
 ####################
 #Numbering by ANARCI
@@ -61,7 +63,7 @@ from anarci import anarci
 #Input: dictionary from sequences ids to raw sequences
 #Output: dictionary from sequence ids to numbered dictionaries of chothia ids to aa
 def bulk_number(sequences):
-	print "[Common.py] Bulk Numbering ",len(sequences),'sequences...'
+	#print "[Common.py] Bulk Numbering ",len(sequences),'sequences...'
 	numbered_sequences = {}
 	for sequence_id in sequences:
 		numbered_sequences[sequence_id] = number_sequence(sequences[sequence_id])
