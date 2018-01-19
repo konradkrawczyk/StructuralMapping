@@ -4,6 +4,7 @@ import os
 from os.path import join
 from os import listdir
 import pickle
+import json
 ####################
 ##Sequence Retrieval
 ####################
@@ -17,10 +18,18 @@ def fetch_sabdab_seqs():
 	from ABDB import database
 	structures = []
 	
+	antigen_map = {}
+
 	for pdb in database:
 		pdb_details = database.fetch(pdb) # get the details of a pdb in the database
 		
 		method =  pdb_details.get_method()
+		for fab_details in pdb_details.get_fabs():
+			antigen_details = fab_details.get_antigen() # get the details of the antigen the fab is bound to
+			if antigen_details != None:
+				antigen_map[pdb] = antigen_details.get_antigen_name()
+			
+
 		#Only X-Ray.
 		if method!= 'X-RAY DIFFRACTION':
 			continue
@@ -40,6 +49,13 @@ def fetch_sabdab_seqs():
 				single_fab['L'] = raw_seqs[fab_details.VL]
 			
 		structures.append(single_fab)
+
+	jsonified = json.dumps(antigen_map)
+	#Write to data dir
+
+	f = open('../../data/antigenmap.json','w')
+	f.write(jsonified)
+	f.close()
 
 	return structures
 
