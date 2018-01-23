@@ -111,7 +111,6 @@ chmod u+rx structurally_map.sh
 Results stored under data/structuralmap/[experiment name] and are a collection of json-formatted files with structural annotation for each sequences submitted (as described in B). A given file is a list from sequence identifiers (as you have specified them in input) to results.
 
 
-```
 As above, you specify the number of CPUs and the name of the experiment. Continuing with our sample experiment this would be (to run on two CPus):
 
 ```
@@ -120,6 +119,16 @@ python StructuralAlignment.py parallel sample 2 > structurally_map.sh
 
 **NB** If number of CPUs is greater than the number of chunks in the data/numbered/[exp name] folder, this will clearly fail. 
 
+### D Finding the structures most mapped to in the dataset.
 
+We provide a facility to find out which structures are the most commonly mapped to in your dataset. Assuming that you have structurally mapped your data and named them MY_EXP you can create the global mapping statistics as follows:
+
+```
+python StructuralResults.py  summary MY_EXP
+```
+This will create the following files in data/summaries/[MY_EXP]:
+
+* top_50.csv - top 50 pdbs for each of cdrs, framework, full variable region and globally (taken as aggregate).
+* CDR_pdb.txt - loops of the given CDR that map to the pdb from top_50.
 
 
