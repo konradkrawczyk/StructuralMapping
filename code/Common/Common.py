@@ -1,5 +1,7 @@
 ####Common functions & locaions##########
 import random,os
+from os.path import join
+import json
 #################
 #Common functions
 #################
@@ -8,20 +10,25 @@ import random,os
 def random_filename():
 	filename = str(int(1000000*random.random()))+str(int(1000000*random.random()))+str(int(1000000*random.random()))
 	return filename
+
+#Fetch the map of antigens.
+def fetch_antigen_map():
+	return json.load(open(join(where_i_am,'../../data/antigenmap.json')))
 	
 
 #################
 #Common locations
 #################
+where_i_am = os.path.dirname(os.path.abspath(__file__))
 
 #Where the numbered_datasets are stored
-numbered_datasets_location = '../data/numbered'
-structural_map_location = '../data/structuralmap'
-aggregates_location = '../data/aggregates'
+numbered_datasets_location = join(where_i_am,'../../data/numbered')
+structural_map_location = join(where_i_am,'../../data/structuralmap')
+aggregates_location = join(where_i_am,'../../data/aggregates')
 #Where the structures of the PDBs are stored ( for FREAD comparisons.)
-structures_location = '../data/structures'
+structures_location = join(where_i_am,'../../data/structures')
 #Where is SAbDab?
-sabdab_location = '../../sabdab-sabpred/data/ABDB/entries/'
+sabdab_location = join(where_i_am,'../../../sabdab-sabpred/data/ABDB/entries/')
 
 
 ############
@@ -110,6 +117,10 @@ def number_sequence(query_seq):
 	
 ###Strictly for testing purposes.	
 if __name__ == '__main__':
+
+	print fetch_antigen_map()
+
+	quit()
 
 	#Test bulk numbering
 	seqs = {
