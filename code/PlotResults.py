@@ -371,7 +371,7 @@ if __name__ == '__main__':
 	if cmd == 'full':
 		print "Plotting full",exp_name
 		plot_region(sys.argv[3],'',exp_name)
-	if cmd == 'cdr':
+	if cmd == 'cdr':#USAGE: python PlotResults.py cdr [exp name]  redundant
 		can_model,cant_model,in_pdb = fetch_cdr_data(exp_name,redundant=(sys.argv[3]=='redundant'))
 		bar_plot(can_model,cant_model,in_pdb,exp_name=exp_name,redundant=sys.argv[3])
 	if cmd == 'ess':#Plot ess scores against lengths.
