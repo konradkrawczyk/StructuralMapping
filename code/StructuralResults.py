@@ -178,8 +178,6 @@ def create_summary(exp_name):
 		#print 'Done',i,'files...'
 		
 		results = extract_data(join(results_location,f),results)
-		if i> 100:
-			break
 		
 
 	stats = {'global':{},'frame':{},'full':{}}
@@ -199,12 +197,12 @@ def create_summary(exp_name):
 	#Get the most common PDBs for cdrs.
 	for cdr in results['cdrs']:
 		
-		stats[cdr] = []
+		stats[cdr] = {}
 		for pdb in results['cdrs'][cdr]:
 			antigen = ''
 			if pdb in antigens:
 				antigen = antigens[pdb]
-			stats[cdr].append({'#':results['cdrs'][cdr][pdb]['#'],'pdb':pdb,'ag':antigen})
+			stats[cdr][pdb] = {'#':results['cdrs'][cdr][pdb]['#'],'pdb':pdb,'ag':antigen}
 			try:
 				stats['global'][pdb]['#']+=1
 			except KeyError:
@@ -215,10 +213,23 @@ def create_summary(exp_name):
 		#print cdr, stats[cdr]
 		#Fold results into the global aggregate.
 		#aggregate = merge_aggregates(aggregate,results)
-	import pprint
-	pprint.pprint(stats)
-	
 	#TODO top10.
+
+	topps = {}
+	for region in stats:
+		current = []
+		for pdb in stats[region]:
+			print region,pdb
+			current.append((stats[region][pdb]['#'],pdb))
+
+		#get the top N
+		topps[region] = sorted(current,reverse=True)[0:min(len(current),50)]
+		formatted = []
+		for elem in topps[region]:
+			pdb = elem[1]
+			formatted.append({'pdb':pdb,'#':elem[0],'ag':stats[region][pdb]['ag']})
+		topps[region] = formatted
+	pprint.pprint(topps)
 
 
 	
