@@ -2,7 +2,7 @@
 import json,os,pprint
 from os import listdir
 from os.path import join
-from Common.Common import structural_map_location,aggregates_location,fetch_antigen_map
+from Common.Common import structural_map_location,aggregates_location,fetch_antigen_map,summaries_location
 
 
 
@@ -135,6 +135,14 @@ def extract_data(loc,results):
 					for cdr in data[sequence][region]:
 						fread_data = data[sequence][region][cdr]
 						
+						#Deal with the length dependent stuff.
+						if len(sequence)<13 and fread_data['scr']<25:
+							continue	
+						elif len(sequence)<17 and fread_data['scr']<40:
+							continue
+						elif len(sequence)>16 and fread_data['scr']<55:
+							continue	
+						
 						query = fread_data['qu']
 						structure = fread_data['str'][0:4]
 						if cdr not in results['cdrs']:
@@ -229,8 +237,32 @@ def create_summary(exp_name):
 			pdb = elem[1]
 			formatted.append({'pdb':pdb,'#':elem[0],'ag':stats[region][pdb]['ag']})
 		topps[region] = formatted
-	pprint.pprint(topps)
+	
 
+	#Create the top csv	
+	out_folder = join(summaries_location,exp_name)
+	if not os.path.exists(out_folder):
+		os.mkdir(out_folder)
+	csv_out = open(join(out_folder,'top_50.csv'),'w')
+	for region in topps:
+
+		
+		for elem in topps[region]:
+			pdb = elem['pdb']
+			csv_out.write(region+','+pdb+','+str(elem['#'])+'\n')
+			if region in ['H1','H2','H3','L1','L2','L3']:
+				region_out = open(join(out_folder,region+'_'+pdb+'.csv'),'w')
+				t = 0
+				for loop in results['cdrs'][region][pdb]['loops']:
+					freq = results['cdrs'][region][pdb]['loops'][loop]
+					region_out.write(loop+','+str(freq)+'\n')
+					t+=freq
+				print region,pdb,t
+				region_out.close()
+				#Also write out the mapped to sequences.
+						
+			
+	csv_out.close()
 
 	
 

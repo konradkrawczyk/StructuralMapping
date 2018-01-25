@@ -23,6 +23,8 @@ where_i_am = os.path.dirname(os.path.abspath(__file__))
 
 #Where the numbered_datasets are stored
 numbered_datasets_location = join(where_i_am,'../../data/numbered')
+#Where the summaries stored?
+summaries_location = join(where_i_am,'../../data/summaries')
 structural_map_location = join(where_i_am,'../../data/structuralmap')
 aggregates_location = join(where_i_am,'../../data/aggregates')
 #Where the structures of the PDBs are stored ( for FREAD comparisons.)
