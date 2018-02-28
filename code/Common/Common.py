@@ -66,7 +66,7 @@ def is_CDR(res,deff='chothia'):
 ####################
 
 #ANARCI-- number.
-from anarci import anarci
+from anarci import run_anarci
 
 #BUlk number sequences. 
 #Input: dictionary from sequences ids to raw sequences
@@ -93,7 +93,7 @@ def get_sequence(s):
 def number_sequence(query_seq):
 	#Number the query sequence
     try:
-	res = anarci([('q',query_seq)],scheme='chothia',assign_germline=True)
+	res = run_anarci([('q',query_seq)],scheme='chothia',assign_germline=True)
     except:
         return None,None
     #Numbering failed.
