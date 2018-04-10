@@ -99,13 +99,14 @@ def number_sequence(query_seq):
     #Numbering failed.
     if res[0][0] == None:
 	return None,None
-    query= res[0][0][0][0]
-	
-    chain =  res[1][0][0]['chain_type']
-	
+    query= res[1][0][0][0]
+    
+    chain =  res[2][0][0]['chain_type']
+    
     #Translate the query into the format we want
     #[chid,insert,chain] = (aa,is_CDR)
     _query = {}
+    
     for sid in sorted(query):
 		
 		chid = (sid[0][0],sid[0][1].replace(' ',''),chain)
