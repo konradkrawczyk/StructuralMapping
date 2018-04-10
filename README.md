@@ -8,7 +8,17 @@ This code is designed to run ona Unix system (Linux or at the very least Os X). 
 
 This protocol assumes that the input is a FASTA-formatted file of amino-acid sequences. If you do not know how to translate your input into amino-acid FASTA, please have a look at IGBlast or IMGT V-Quest.
 
-One thing you need to install yourself is Anarci (free software): http://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/ANARCI.php
+The main dependency of this code is ANARCI, which is currently packaged with the code. The two dependencies that you would have to install yourself as they are system-dependent are numpy and hmmer. Numpy you can install using pip:
+
+```
+sudo pip install numpy
+```
+
+hmmer you can install from the source on their website (http://hmmer.org/) or on ubuntu by:
+
+```
+sudo apt-get install hmmer
+```
 
 Otherwise it is supposed to work out of the box as described below. If it doesn't drop an email to konrad.krawczyk@stats.ox.ac.uk
 
@@ -30,7 +40,10 @@ Navigate to the 'code' directory and from here, type
 python StructuralAlignment.py process_single EVQLQQSGAEVVRSGASVKLSCTASGFNIKDYYIHWVKQRPEKGLEWIGWIDPEIGDTEYVPKFQGKATMTADTSSNTAYLQLSSLTSEDTAVYYCNAGHDYDRGRFPYWGQGTLVTVSAAKTTPPSVYPLAPGSAAQTNSMVTLGCLVKGYFPEPVTVTWNSGSLSSGVHTFPAVLQSDLYTLSSSVTVPSSTWPSETVTCNVAHPASSTKVDKKIVPRD
 ```
 
-Results are displayed on output.
+Results are displayed on output and should look like this (if they do not look like this, ANARCI might not be working so check your hmmer and numpy installs):
+```
+({'best_pdb': '12e8P', 'best_sid': 100}, {'best_pdb': '12e8P', 'best_sid': 100}, {'best_pdb': '12e8P', 'best_sid': 100}, {'H2': [(45, {'qu': 'DPEIGD', 'seq': u'DPEIGD', 'str': u'12e8P', 'scr': 45}), (45, {'qu': 'DPEIGD', 'seq': u'DPEIGD', 'str': u'12e8H', 'scr': 45}), (32, {'qu': 'DPEIGD', 'seq': u'DPENGD', 'str': u'1il1A', 'scr': 32}), (31, {'qu': 'DPEIGD', 'seq': u'DPENGD', 'str': u'5aamB', 'scr': 31}), (31, {'qu': 'DPEIGD', 'seq': u'DPENGD', 'str': u'5aamA', 'scr': 31}), (31, {'qu': 'DPEIGD', 'seq': u'DPENGD', 'str': u'4tqeH', 'scr': 31}), (31, {'qu': 'DPEIGD', 'seq': u'DPENGD', 'str': u'4tprH', 'scr': 31}), (31, {'qu': 'DPEIGD', 'seq': u'DPENGD', 'str': u'1qokA', 'scr': 31}), (27, {'qu': 'DPEIGD', 'seq': u'DPESGE', 'str': u'1iqdB', 'scr': 27}), (27, {'qu': 'DPEIGD', 'seq': u'DPEQGN', 'str': u'1pg7I', 'scr': 27})], 'H3': [(97, {'qu': 'GHDYDRGRFPY', 'seq': u'GHDYDRGRFPY', 'str': u'12e8P', 'scr': 97}), (97, {'qu': 'GHDYDRGRFPY', 'seq': u'GHDYDRGRFPY', 'str': u'12e8H', 'scr': 97}), (32, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFAY', 'str': u'3okmB', 'scr': 32}), (30, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFAY', 'str': u'3okeB', 'scr': 30}), (28, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFSY', 'str': u'3t65B', 'scr': 28}), (28, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFSY', 'str': u'3t4yB', 'scr': 28}), (28, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFSY', 'str': u'3sy0B', 'scr': 28}), (28, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFSY', 'str': u'2r2hB', 'scr': 28}), (28, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFSY', 'str': u'2r2bB', 'scr': 28}), (28, {'qu': 'GHDYDRGRFPY', 'seq': u'DHDGYYERFSY', 'str': u'2r23B', 'scr': 28})], 'H1': [(56, {'qu': 'GFNIKDY', 'seq': u'GFNIKDY', 'str': u'1fgnH', 'scr': 56}), (51, {'qu': 'GFNIKDY', 'seq': u'GFNIKEY', 'str': u'1jptH', 'scr': 51}), (51, {'qu': 'GFNIKDY', 'seq': u'GFNIKEY', 'str': u'1jpsH', 'scr': 51}), (44, {'qu': 'GFNIKDY', 'seq': u'GFDISDY', 'str': u'5dscE', 'scr': 44}), (44, {'qu': 'GFNIKDY', 'seq': u'GFDISDY', 'str': u'5dscA', 'scr': 44}), (44, {'qu': 'GFNIKDY', 'seq': u'GFDISDY', 'str': u'5drnH', 'scr': 44}), (44, {'qu': 'GFNIKDY', 'seq': u'GFDISDY', 'str': u'5drnA', 'scr': 44}), (42, {'qu': 'GFNIKDY', 'seq': u'GFTISDY', 'str': u'3auvF', 'scr': 42}), (42, {'qu': 'GFNIKDY', 'seq': u'GFTISDY', 'str': u'3auvE', 'scr': 42}), (42, {'qu': 'GFNIKDY', 'seq': u'GFTISDY', 'str': u'3auvD', 'scr': 42})]})
+```
 
 ### B Results
 
