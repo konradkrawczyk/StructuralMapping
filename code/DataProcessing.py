@@ -102,7 +102,10 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 				sequences = {}
 			prog+=1
 			
-		
+		if prog<start:
+			continue
+		if prog>finish:
+			break
 		#print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
 		line = line.strip()
 		if '>' in line:
