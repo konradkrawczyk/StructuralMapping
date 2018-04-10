@@ -90,42 +90,27 @@ def parse_fasta_and_number(experiment_name,fasta_location,start,finish):
 	#How far did we get through the file.
 	prog = 0
 	
-	#used for checkpointing,seeing when the calcaultion stopped.
-	curr_prog = 0
-	#Find the latest if any.
-	if os.path.exists(join(structural_map_location,experiment_name)):
-		
-		for fname in listdir(join(structural_map_location,experiment_name)):
-			fname = int(fname.replace('.json',''))
-			print fname,start,finish
-			if fname<start or finish<fname:
-				continue
-			else:
-				if fname>start and finish>=fname and fname>curr_prog:
-					curr_prog = fname
-	#Current sequence being read.	
-
+	#Current sequence being read.
 	for line in open(fasta_location):
-		if 'QVQLVQSGPGLVKPSQTLSLTCAISGDIVSSNNAAWNWIRQSPSRGLEWLGRTYYRSKWYNDYAVSVKSRITINPDTSKNQFSLQLNSVTPEDTAVYYCVRDNLSTGHREFDYWGQGPLVTVSS' in line:
-			print prog
+		
+		
+
 		if '>' in line:#Count progress only by the sequence line, to make sure we start with the next one.
+			if len(sequences)> chunk_size:
+				number_and_save(sequences,experiment_name,str(min(prog,finish)))
+
+				sequences = {}
 			prog+=1
-		if prog<start or prog<curr_prog:
-			continue
-		if prog>finish:
-			break
+			
+		
 		#print "[DataProcessing.py] Custom dataset parsing ",prog,'sequences read... '
 		line = line.strip()
 		if '>' in line:
 			curr_name = line.replace('>','')
 			sequences[curr_name] = ""
 		else:
-			
 			sequences[curr_name] += line.strip()
-		if len(sequences)> chunk_size:
-			number_and_save(sequences,experiment_name,str(min(prog,finish)))
-
-			sequences = {}
+		
 	
 	#See if we got any leftovers
 	if len(sequences)> 0:
