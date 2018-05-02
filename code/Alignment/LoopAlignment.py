@@ -1,5 +1,6 @@
 from FREAD.pyfread_api import run_fread
-from Common.Common import is_CDR
+from Common.Common import is_CDR,structures_location,fread_dbs
+from os.path import join
 
 #Maintain a cache for fread results (for parallel runs)
 #(cdr,template,sequence) -> results
@@ -42,10 +43,11 @@ def perform_loop_alignment(loop,template_pdb,template_chain,sequence,return_top=
 		return fread_cache[cache_key]
 
 	#database location
-	db = '../data/fread_db/db_CDR'+loop
+	db = fread_dbs+loop
+
 
 	#Template location.
-	template = '../data/structures/'+template_pdb+template_chain+'_no_cdrs.pdb'
+	template = join(structures_location,template_pdb+template_chain+'_no_cdrs.pdb')
 	results = run_fread(db,template,loop_starts[loop],sequence,template_chain,'')
 
 	

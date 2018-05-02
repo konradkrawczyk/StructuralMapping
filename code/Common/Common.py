@@ -31,6 +31,8 @@ aggregates_location = join(where_i_am,'../../data/aggregates')
 structures_location = join(where_i_am,'../../data/structures')
 #Where is SAbDab?
 sabdab_location = join(where_i_am,'../../../sabdab-sabpred/data/ABDB/entries/')
+#Where are the fread databases?
+fread_dbs =  join(where_i_am,'../../data/fread_db/db_CDR')
 
 
 ############
