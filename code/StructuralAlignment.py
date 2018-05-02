@@ -57,6 +57,7 @@ def align_single_sequence(query, structures):
 		try:
 			fread_results = get_best_cdr_match(query,full_results['best_pdb'])
 		except:
+			raise
 			pass
 	return full_results,frame_results,cdr_results,fread_results
 
