@@ -15,11 +15,6 @@ def random_filename():
 def fetch_antigen_map():
 	return json.load(open(join(where_i_am,'../../data/antigenmap.json')))
 	
-#Fetch all files in directory and subdirectories.
-def list_file_paths(directory):
-   for dirpath,_,filenames in os.walk(directory):
-       for f in filenames:
-           yield os.path.abspath(os.path.join(dirpath, f))
 
 #################
 #Common locations
