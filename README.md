@@ -22,7 +22,7 @@ sudo apt-get install hmmer
 
 (It was tested to work with version 3.1b).
 
-Otherwise it is supposed to work out of the box as described below. If it doesn't drop an email to konrad.krawczyk@stats.ox.ac.uk
+Otherwise it is supposed to work out of the box as described below. If it doesn't drop an email to konrad@proteincontact.org
 
 ## Install
 
